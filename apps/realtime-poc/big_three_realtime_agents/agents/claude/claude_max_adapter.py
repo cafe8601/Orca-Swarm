@@ -11,6 +11,9 @@ import time
 from pathlib import Path
 from typing import Dict, Any, Optional, List
 from playwright.sync_api import sync_playwright, Page, Browser
+from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
+
+from ...exceptions import BrowserLaunchError, ClaudeError, BrowserNavigationError
 
 logger = logging.getLogger(__name__)
 
@@ -89,9 +92,15 @@ class ClaudeMaxAdapter:
                 "url": self.page.url
             }
 
-        except Exception as exc:
-            self.logger.error(f"Failed to initialize Claude Max adapter: {exc}")
+        except PlaywrightTimeoutError as exc:
+            self.logger.error(f"Browser initialization timed out: {exc}")
+            return {"ok": False, "error": f"Timeout: {exc}"}
+        except (BrowserLaunchError, BrowserNavigationError) as exc:
+            self.logger.error(f"Browser error during initialization: {exc}")
             return {"ok": False, "error": str(exc)}
+        except Exception as exc:
+            self.logger.error(f"Unexpected initialization error: {exc}", exc_info=True)
+            raise BrowserLaunchError(f"Claude Max adapter initialization failed: {exc}") from exc
 
     def check_login_status(self) -> bool:
         """
