@@ -96,9 +96,14 @@ class SecurityManager:
 
         permission = permission_map.get(operation)
         if not permission:
-            # Unknown operation, log and allow (fail-open for now)
-            logger.warning(f"Unknown operation for authorization: {operation}")
-            return True
+            # Unknown operation - FAIL CLOSED (secure default)
+            logger.warning(f"Unknown operation for authorization: {operation} - DENIED")
+            self.audit_log("authorization_denied", {
+                "user": user,
+                "operation": operation,
+                "reason": "unknown_operation"
+            }, user=user, severity="warning")
+            return False
 
         # Check permission
         has_permission = self.access.check_permission(user, permission)

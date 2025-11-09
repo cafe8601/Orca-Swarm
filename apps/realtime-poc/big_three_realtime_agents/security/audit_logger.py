@@ -7,7 +7,7 @@ Tracks security-relevant events for compliance and debugging.
 import json
 import logging
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from datetime import datetime
 from enum import Enum
 
