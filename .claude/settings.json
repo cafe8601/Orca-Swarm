@@ -1,9 +1,4 @@
 {
-  "statusLine": {
-    "type": "command",
-    "command": "uv run $CLAUDE_PROJECT_DIR/.claude/status_lines/status_line_v3.py",
-    "padding": 0
-  },
   "hooks": {
     "PreToolUse": [
       {
@@ -11,11 +6,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/pre_tool_use.py"
+            "command": "uv run .claude/hooks/pre_tool_use.py"
           },
           {
             "type": "command",
-            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/send_event.py --source-app big-3-super-agent --event-type PreToolUse --summarize"
+            "command": "uv run .claude/hooks/send_event.py --source-app multi-agent-learning --event-type PreToolUse --summarize"
           }
         ]
       }
@@ -26,67 +21,67 @@
         "hooks": [
           {
             "type": "command",
-            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/post_tool_use.py"
+            "command": "uv run .claude/hooks/post_tool_use.py"
           },
           {
             "type": "command",
-            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/send_event.py --source-app big-3-super-agent --event-type PostToolUse --summarize"
+            "command": "uv run .claude/hooks/send_event.py --source-app multi-agent-learning --event-type PostToolUse --summarize"
           }
         ]
       }
     ],
     "Notification": [
       {
-        "matcher": "",
         "hooks": [
           {
             "type": "command",
-            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/notification.py --notify"
+            "command": "uv run .claude/hooks/notification.py --notify"
           },
           {
             "type": "command",
-            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/send_event.py --source-app big-3-super-agent --event-type Notification --summarize"
+            "command": "uv run .claude/hooks/send_event.py --source-app multi-agent-learning --event-type Notification --summarize"
           }
         ]
       }
     ],
     "Stop": [
       {
-        "matcher": "",
         "hooks": [
           {
             "type": "command",
-            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/stop.py --chat"
+            "command": "uv run .claude/hooks/stop.py --chat"
           },
           {
             "type": "command",
-            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/send_event.py --source-app big-3-super-agent --event-type Stop --add-chat"
+            "command": "uv run .claude/hooks/send_event.py --source-app multi-agent-learning --event-type Stop --add-chat"
           }
         ]
       }
     ],
     "SubagentStop": [
       {
-        "matcher": "",
         "hooks": [
           {
             "type": "command",
-            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/subagent_stop.py"
+            "command": "uv run .claude/hooks/subagent_stop.py"
           },
           {
             "type": "command",
-            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/send_event.py --source-app big-3-super-agent --event-type SubagentStop"
+            "command": "uv run .claude/hooks/send_event.py --source-app multi-agent-learning --event-type SubagentStop"
           }
         ]
       }
     ],
     "PreCompact": [
       {
-        "matcher": "",
         "hooks": [
           {
             "type": "command",
-            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/send_event.py --source-app big-3-super-agent --event-type PreCompact"
+            "command": "uv run .claude/hooks/pre_compact.py"
+          },
+          {
+            "type": "command",
+            "command": "uv run .claude/hooks/send_event.py --source-app multi-agent-learning --event-type PreCompact"
           }
         ]
       }
@@ -96,11 +91,39 @@
         "hooks": [
           {
             "type": "command",
-            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/user_prompt_submit.py --log-only --store-last-prompt --name-agent"
+            "command": "uv run .claude/hooks/user_prompt_submit.py --log-only"
           },
           {
             "type": "command",
-            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/send_event.py --source-app big-3-super-agent --event-type UserPromptSubmit --summarize"
+            "command": "uv run .claude/hooks/send_event.py --source-app multi-agent-learning --event-type UserPromptSubmit --summarize"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run .claude/hooks/session_start.py"
+          },
+          {
+            "type": "command",
+            "command": "uv run .claude/hooks/send_event.py --source-app multi-agent-learning --event-type SessionStart"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run .claude/hooks/session_end.py"
+          },
+          {
+            "type": "command",
+            "command": "uv run .claude/hooks/send_event.py --source-app multi-agent-learning --event-type SessionEnd"
           }
         ]
       }

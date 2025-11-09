@@ -13,6 +13,7 @@ import sys
 import subprocess
 from pathlib import Path
 from datetime import datetime
+from utils.constants import ensure_session_log_dir
 
 try:
     from dotenv import load_dotenv
@@ -81,7 +82,6 @@ def main():
         # Parse command line arguments
         parser = argparse.ArgumentParser()
         parser.add_argument('--chat', action='store_true', help='Copy transcript to chat.json')
-        parser.add_argument('--notify', action='store_true', help='Enable TTS completion announcement')
         args = parser.parse_args()
         
         # Read JSON input from stdin
@@ -91,13 +91,12 @@ def main():
         session_id = input_data.get("session_id", "")
         stop_hook_active = input_data.get("stop_hook_active", False)
 
-        # Ensure log directory exists
-        log_dir = os.path.join(os.getcwd(), "logs")
-        os.makedirs(log_dir, exist_ok=True)
-        log_path = os.path.join(log_dir, "subagent_stop.json")
+        # Ensure session log directory exists
+        log_dir = ensure_session_log_dir(session_id)
+        log_path = log_dir / "subagent_stop.json"
 
         # Read existing log data or initialize empty list
-        if os.path.exists(log_path):
+        if log_path.exists():
             with open(log_path, 'r') as f:
                 try:
                     log_data = json.load(f)
@@ -136,9 +135,8 @@ def main():
                 except Exception:
                     pass  # Fail silently
 
-        # Announce subagent completion via TTS (only if --notify flag is set)
-        if args.notify:
-            announce_subagent_completion()
+        # Announce subagent completion via TTS
+        announce_subagent_completion()
 
         sys.exit(0)
 

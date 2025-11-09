@@ -1,9 +1,10 @@
 # Multi-Agent Learning System
 
-> 🤖 음성으로 제어하는 통합 AI 에이전트 오케스트레이션 시스템 + 159개의 전문화된 AI 에이전트 풀
+> 🤖 음성으로 제어하는 통합 AI 에이전트 오케스트레이션 시스템 + 159개의 전문화된 AI 에이전트 풀 + 실시간 Observability 대시보드
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![Observability](https://img.shields.io/badge/Observability-Integrated-green.svg)](OBSERVABILITY_GUIDE.md)
 
 ---
 
@@ -14,6 +15,7 @@
 - [시스템 아키텍처](#-시스템-아키텍처)
 - [디렉토리 구조](#-디렉토리-구조)
 - [빠른 시작](#-빠른-시작)
+- [Observability 대시보드](#-observability-대시보드)
 - [컴포넌트 상세](#-컴포넌트-상세)
 - [에이전트 풀](#-에이전트-풀)
 - [문서](#-문서)
@@ -51,6 +53,7 @@ Multi-Agent Learning System은 두 가지 핵심 시스템으로 구성됩니다
 - ✅ **브라우저 자동화**: Playwright + Gemini Computer Use API
 - ✅ **자동 코드 생성**: Claude Code SDK 기반 소프트웨어 개발
 - ✅ **레지스트리 관리**: 모든 에이전트 세션 추적 및 재사용
+- ✅ **실시간 Observability**: 웹 대시보드로 모든 에이전트 활동 모니터링 (NEW)
 
 ### Agent Pool System
 - ✅ **100% 독립 실행**: Context Manager 의존성 없음
@@ -280,6 +283,83 @@ pytest --cov --cov-report=html
 # 상세 가이드
 cat tests/README.md
 ```
+
+---
+
+## 📊 Observability 대시보드
+
+### 실시간 멀티 에이전트 모니터링
+
+Big Three Agents의 모든 활동을 **실시간으로 시각화**하는 웹 대시보드가 통합되어 있습니다.
+
+**주요 기능**:
+- ✅ **실시간 이벤트 타임라인**: 모든 에이전트 활동 실시간 추적
+- ✅ **멀티 세션 추적**: 여러 에이전트 동시 모니터링
+- ✅ **툴 사용 분석**: Read, Write, Bash 등 도구 사용 패턴
+- ✅ **성능 메트릭**: 활동 차트 및 통계
+- ✅ **채팅 기록**: 전체 대화 내역 조회
+- ✅ **에러 추적**: 문제 발생 즉시 파악
+
+### 빠른 시작
+
+```bash
+# Observability 시스템 시작
+./scripts/start-observability.sh
+
+# 대시보드 접속
+open http://localhost:5173
+
+# 또는 Docker로
+docker compose up -d observability-server observability-client
+```
+
+### 사용 예시
+
+```bash
+# 1. Observability 대시보드 시작
+./scripts/start-observability.sh
+
+# 2. 멀티 에이전트 작업 실행
+python -m apps.realtime-poc.big_three_realtime_agents.main \
+  --prompt "Create a FastAPI backend"
+
+# 3. 대시보드에서 실시간 확인:
+#    - OpenAI Orchestrator 결정
+#    - Claude Code 파일 생성/수정
+#    - Agent Pool 전문가 할당
+#    - 작업 소요 시간
+#    - 에러 발생 여부
+```
+
+**아키텍처**:
+```
+Claude Agent → Hooks → Server → WebSocket → Vue Dashboard
+                 ↓
+            SQLite DB
+```
+
+**상세 가이드**: [OBSERVABILITY_GUIDE.md](OBSERVABILITY_GUIDE.md)
+
+---
+
+
+## 📊 Observability 대시보드
+
+### 실시간 멀티 에이전트 모니터링 (NEW)
+
+**주요 기능**:
+- ✅ 실시간 이벤트 타임라인
+- ✅ 멀티 세션 추적
+- ✅ 성능 메트릭
+- ✅ 채팅 기록 조회
+
+**시작**:
+```bash
+./scripts/start-observability.sh
+open http://localhost:5173
+```
+
+**상세**: [OBSERVABILITY_GUIDE.md](OBSERVABILITY_GUIDE.md)
 
 ---
 

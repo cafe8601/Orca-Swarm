@@ -119,6 +119,60 @@ services:
     profiles:
       - monitoring
 
+  # Observability Server (Event ingestion & WebSocket streaming)
+  observability-server:
+    image: oven/bun:latest
+    container_name: big-three-observability-server
+    working_dir: /app
+    volumes:
+      - ./apps/observability-server:/app:rw
+      - observability_db:/app/data
+    command: bun run src/index.ts
+    ports:
+      - "4000:4000"  # HTTP API & WebSocket
+    environment:
+      - NODE_ENV=production
+      - PORT=4000
+      - DB_PATH=/app/data/events.db
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    restart: unless-stopped
+    networks:
+      - big-three-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Observability Client (Vue 3 Dashboard)
+  observability-client:
+    image: node:18-alpine
+    container_name: big-three-observability-client
+    working_dir: /app
+    volumes:
+      - ./apps/observability-client:/app:rw
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    ports:
+      - "5173:5173"  # Vite dev server
+    environment:
+      - NODE_ENV=development
+      - VITE_WS_URL=ws://localhost:4000
+      - VITE_API_URL=http://localhost:4000
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    restart: unless-stopped
+    depends_on:
+      - observability-server
+    networks:
+      - big-three-network
+
 networks:
   big-three-network:
     driver: bridge
@@ -129,4 +183,6 @@ volumes:
   prometheus_data:
     driver: local
   grafana_data:
+    driver: local
+  observability_db:
     driver: local
