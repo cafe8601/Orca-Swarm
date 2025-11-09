@@ -148,7 +148,7 @@ class RAGSystem:
 
         return None
 
-    def _build_augmented_query(self, original: str, context: Dict) -> str:
+    def _build_augmented_query(self, original: str, context: Dict[str, Any]) -> str:
         """Build augmented query with context."""
         parts = [f"User Request: {original}\n"]
 
@@ -190,7 +190,7 @@ class RAGSystem:
 
         return "\n".join(parts)
 
-    def index_code(self, code_path: str, content: str, metadata: Dict = None):
+    def index_code(self, code_path: str, content: str, metadata: Optional[Dict[str, Any]] = None) -> None:
         """
         Index code with embeddings.
 
@@ -216,7 +216,7 @@ class RAGSystem:
         except Exception as exc:
             self.logger.error(f"Failed to index code {code_path}: {exc}")
 
-    def index_codebase(self, codebase_path: Path):
+    def index_codebase(self, codebase_path: Path) -> None:
         """
         Index entire codebase.
 
@@ -302,7 +302,7 @@ class RAGSystem:
             self.logger.error(f"Code search failed: {exc}")
             return []
 
-    def index_experience(self, experience: Dict[str, Any]):
+    def index_experience(self, experience: Dict[str, Any]) -> None:
         """
         Index workflow experience.
 

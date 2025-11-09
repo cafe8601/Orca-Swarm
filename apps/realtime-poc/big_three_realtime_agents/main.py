@@ -20,7 +20,7 @@ from .utils import console
 from .agents.openai import OpenAIRealtimeVoiceAgent
 
 
-def main():
+def main() -> int:
     """Main entry point."""
     parser = argparse.ArgumentParser(
         description="Big Three Realtime Agents - Unified agent system with voice, coding, and browser automation.",
