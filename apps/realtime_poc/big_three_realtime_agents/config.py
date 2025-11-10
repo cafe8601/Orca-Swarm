@@ -21,6 +21,14 @@ BROWSER_TOOL_STARTING_URL = os.environ.get(
 )
 
 # ================================================================
+# Observability Configuration
+# ================================================================
+
+OBSERVABILITY_SERVER_URL = os.environ.get(
+    "OBSERVABILITY_SERVER_URL", "http://localhost:4000/events"
+)
+
+# ================================================================
 # Audio Configuration
 # ================================================================
 

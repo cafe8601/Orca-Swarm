@@ -15,6 +15,8 @@ from rich.panel import Panel
 
 from ...config import GEMINI_MODEL
 from ...utils import console
+from ...utils.retry import retry_with_backoff
+from ...timeouts import GEMINI_API_TIMEOUT
 from .functions import GeminiFunctionHandler
 from .screenshot_manager import ScreenshotManager
 
@@ -45,6 +47,32 @@ class BrowserAutomationLoop:
         # Initialize managers
         self.function_handler = GeminiFunctionHandler(page, logger)
         self.screenshot_manager = ScreenshotManager(page, screenshot_dir, logger)
+
+    @retry_with_backoff(
+        max_attempts=3,
+        initial_delay=2.0,
+        exceptions=(ConnectionError, TimeoutError, OSError, Exception),
+    )
+    def _call_gemini_api_with_retry(self, contents, config):
+        """
+        Call Gemini API with retry logic and timeout.
+
+        Args:
+            contents: Conversation contents.
+            config: Generation config.
+
+        Returns:
+            API response.
+
+        Raises:
+            Exception: If all retry attempts fail.
+        """
+        self.logger.debug(f"Calling Gemini API (timeout: {GEMINI_API_TIMEOUT}s)")
+        return self.gemini_client.models.generate_content(
+            model=GEMINI_MODEL,
+            contents=contents,
+            config=config,
+        )
 
     def run(self, task: str, max_turns: int = 30) -> str:
         """
@@ -89,12 +117,8 @@ class BrowserAutomationLoop:
             self.logger.info(f"Turn {turn + 1}/{max_turns}")
 
             try:
-                # Get response from Gemini
-                response = self.gemini_client.models.generate_content(
-                    model=GEMINI_MODEL,
-                    contents=contents,
-                    config=config,
-                )
+                # Get response from Gemini with retry logic
+                response = self._call_gemini_api_with_retry(contents, config)
 
                 candidate = response.candidates[0]
                 contents.append(candidate.content)

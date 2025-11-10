@@ -9,6 +9,8 @@ import logging
 from pathlib import Path
 from typing import Dict, Any, Optional, List
 
+from ...timeouts import AGENT_CREATION_TIMEOUT, AGENT_EXECUTION_TIMEOUT
+
 
 class AgentLifecycleManager:
     """Manages agent lifecycle operations."""
@@ -61,7 +63,7 @@ class AgentLifecycleManager:
         browser_agent,
     ) -> Dict[str, Any]:
         """
-        Create a new Claude Code agent.
+        Create a new Claude Code agent with timeout protection.
 
         Args:
             tool: Tool identifier.
@@ -74,17 +76,26 @@ class AgentLifecycleManager:
         """
         try:
             existing_names = self.registry_manager.get_existing_names()
-            result = asyncio.run(
-                self.agent_creator.create_new_agent(
-                    tool,
-                    agent_type,
-                    agent_name,
-                    existing_names,
-                    browser_agent,
-                    self.registry_manager.get_agent_directory,
+
+            # Async wrapper with timeout
+            async def create_with_timeout():
+                return await asyncio.wait_for(
+                    self.agent_creator.create_new_agent(
+                        tool,
+                        agent_type,
+                        agent_name,
+                        existing_names,
+                        browser_agent,
+                        self.registry_manager.get_agent_directory,
+                    ),
+                    timeout=AGENT_CREATION_TIMEOUT
                 )
-            )
+
+            result = asyncio.run(create_with_timeout())
             return {"ok": True, "data": result}
+        except asyncio.TimeoutError:
+            self.logger.error(f"Agent creation timed out after {AGENT_CREATION_TIMEOUT}s")
+            return {"ok": False, "error": f"Agent creation timed out after {AGENT_CREATION_TIMEOUT}s"}
         except Exception as exc:
             self.logger.exception("Agent creation failed")
             return {"ok": False, "error": str(exc)}
@@ -93,7 +104,7 @@ class AgentLifecycleManager:
         self, agent_name: str, prompt: str
     ) -> Dict[str, Any]:
         """
-        Send command to existing agent.
+        Send command to existing agent with timeout protection.
 
         Args:
             agent_name: Name of the agent.
@@ -109,11 +120,24 @@ class AgentLifecycleManager:
         if not session_id:
             return {"ok": False, "error": f"Agent '{agent_name}' has no session_id"}
 
-        # Prepare operator file
-        agent_dir = self.registry_manager.get_agent_directory(agent_name)
-        operator_file = asyncio.run(
-            self.operator_file_manager.prepare_operator_file(agent_dir, prompt)
-        )
+        # Prepare operator file with timeout
+        try:
+            agent_dir = self.registry_manager.get_agent_directory(agent_name)
+
+            # Async wrapper with timeout
+            async def prepare_with_timeout():
+                return await asyncio.wait_for(
+                    self.operator_file_manager.prepare_operator_file(agent_dir, prompt),
+                    timeout=AGENT_CREATION_TIMEOUT
+                )
+
+            operator_file = asyncio.run(prepare_with_timeout())
+        except asyncio.TimeoutError:
+            self.logger.error(f"Operator file preparation timed out after {AGENT_CREATION_TIMEOUT}s")
+            return {"ok": False, "error": f"Operator file preparation timed out after {AGENT_CREATION_TIMEOUT}s"}
+        except Exception as exc:
+            self.logger.exception("Failed to prepare operator file")
+            return {"ok": False, "error": str(exc)}
 
         # Run in background thread
         self.agent_executor.run_command_thread(

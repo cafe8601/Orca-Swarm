@@ -87,6 +87,9 @@ class InputHandler:
         self.audio_state = audio_state
         self.keyboard_listener: Optional[keyboard.Listener] = None
         self.shift_pressed: bool = False
+        
+        # Thread safety for WebSocket operations
+        self._ws_lock = threading.Lock()
 
     def text_input_loop(self) -> None:
         """
@@ -245,7 +248,7 @@ class InputHandler:
 
     def _dispatch_text_message(self, text: str) -> None:
         """
-        Send text message to API and request response.
+        Send text message to API and request response (thread-safe).
 
         Creates a conversation item with user message and immediately
         requests a response from the agent.
@@ -257,11 +260,10 @@ class InputHandler:
             Sends two WebSocket messages:
             1. conversation.item.create: Adds user message to conversation
             2. response.create: Triggers agent response generation
+            
+            Thread-safe: Uses lock to prevent race conditions during
+            concurrent access to WebSocket connection.
         """
-        if not self.ws:
-            self.logger.warning("No WebSocket connection, message not sent")
-            return
-
         event = {
             "type": "conversation.item.create",
             "item": {
@@ -273,12 +275,13 @@ class InputHandler:
 
         self.logger.info(f"Sending text message: {text}")
 
-        # Validate WebSocket connection before sending
-        if not self.ws:
-            self.logger.warning("No WebSocket connection - cannot send message")
-            return
-
-        self.ws.send(json.dumps(event))
-
-        response_event = {"type": "response.create", "response": {}}
-        self.ws.send(json.dumps(response_event))
+        # Thread-safe WebSocket operation
+        with self._ws_lock:
+            if not self.ws:
+                self.logger.warning("No WebSocket connection - cannot send message")
+                return
+            
+            self.ws.send(json.dumps(event))
+            
+            response_event = {"type": "response.create", "response": {}}
+            self.ws.send(json.dumps(response_event))

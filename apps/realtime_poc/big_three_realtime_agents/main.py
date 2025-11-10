@@ -6,6 +6,9 @@ Handles command-line argument parsing and agent initialization.
 """
 
 import argparse
+import signal
+import sys
+from typing import Optional
 from rich.panel import Panel
 
 from .logging_setup import setup_logging
@@ -20,8 +23,39 @@ from .utils import console
 from .agents.openai import OpenAIRealtimeVoiceAgent
 
 
+# Global agent instance for signal handlers
+_agent_instance: Optional[OpenAIRealtimeVoiceAgent] = None
+
+
+def signal_handler(signum: int, frame) -> None:
+    """
+    Handle SIGTERM and SIGINT gracefully.
+
+    Args:
+        signum: Signal number received.
+        frame: Current stack frame.
+    """
+    signal_name = "SIGTERM" if signum == signal.SIGTERM else "SIGINT"
+    print(f"\n{signal_name} received, shutting down gracefully...", file=sys.stderr)
+
+    if _agent_instance:
+        try:
+            _agent_instance.cleanup()
+            print("Agent cleanup completed successfully", file=sys.stderr)
+        except Exception as e:
+            print(f"Error during cleanup: {e}", file=sys.stderr)
+
+    sys.exit(0)
+
+
 def main() -> int:
     """Main entry point."""
+    global _agent_instance
+
+    # Register signal handlers for graceful shutdown
+    signal.signal(signal.SIGTERM, signal_handler)
+    signal.signal(signal.SIGINT, signal_handler)
+
     parser = argparse.ArgumentParser(
         description="Big Three Realtime Agents - Unified agent system with voice, coding, and browser automation.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -119,12 +153,23 @@ def main() -> int:
             realtime_model=realtime_model,
             auto_timeout=args.timeout,
         )
+        _agent_instance = agent  # Set global instance for signal handlers
+
         agent.connect()
     except KeyboardInterrupt:
         logger.info("\nShutdown requested by user")
     except Exception as exc:
         logger.error(f"Fatal error: {exc}", exc_info=True)
         return 1
+    finally:
+        # Ensure cleanup is always called
+        if _agent_instance:
+            try:
+                _agent_instance.cleanup()
+                logger.info("Agent cleanup completed")
+            except Exception as e:
+                logger.error(f"Error during cleanup: {e}")
+            _agent_instance = None
 
     logger.info("Agent terminated")
     return 0

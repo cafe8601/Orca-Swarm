@@ -43,8 +43,10 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy
     networks:
       - big-three-network
 
@@ -149,18 +151,19 @@ services:
       - big-three-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
-      interval: 30s
-      timeout: 10s
+      interval: 10s
+      timeout: 5s
       retries: 3
+      start_period: 30s
 
   # Observability Client (Vue 3 Dashboard)
   observability-client:
-    image: node:18-alpine
+    image: oven/bun:1.0.20  # Use bun for consistency
     container_name: big-three-observability-client
     working_dir: /app
     volumes:
       - ./apps/observability-client:/app:rw
-    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    command: sh -c "bun install && bun run dev -- --host 0.0.0.0"
     ports:
       - "5173:5173"  # Vite dev server
     environment:
@@ -174,7 +177,14 @@ services:
           memory: 512M
     restart: unless-stopped
     depends_on:
-      - observability-server
+      observability-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5173"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     networks:
       - big-three-network
 

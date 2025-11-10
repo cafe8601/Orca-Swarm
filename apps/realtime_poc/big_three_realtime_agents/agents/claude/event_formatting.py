@@ -11,6 +11,10 @@ from datetime import datetime
 from typing import Dict, Any, Optional
 import logging
 
+from ...config import OBSERVABILITY_SERVER_URL
+from ...timeouts import OBSERVABILITY_EVENT_TIMEOUT
+from ...utils.retry import retry_with_backoff
+
 
 def build_event_data(
     agent_name: str,
@@ -69,11 +73,21 @@ def extract_tool_context(tool_name: str, tool_input: Dict[str, Any]) -> str:
     return " | ".join(context_parts) if context_parts else "No specific context"
 
 
+@retry_with_backoff(
+    max_attempts=2,  # Quick retries for observability events
+    initial_delay=0.5,  # Short delay for fast failure
+    exceptions=(urllib.error.URLError, ConnectionError, TimeoutError),
+)
 def send_http_event(
     event_data: dict, logger: logging.Logger, agent_name: str
 ) -> None:
     """
-    Send event data to observability server via HTTP (fails silently).
+    Send event data to observability server via HTTP with retry logic.
+
+    Features:
+    - Automatic retry on transient failures (network errors)
+    - Fast failure with short delays (0.5s initial, 2 attempts max)
+    - Silent failure on non-retryable errors
 
     Args:
         event_data: Formatted event data.
@@ -82,7 +96,7 @@ def send_http_event(
     """
     try:
         req = urllib.request.Request(
-            "http://localhost:4000/events",
+            OBSERVABILITY_SERVER_URL,
             data=json.dumps(event_data).encode("utf-8"),
             headers={
                 "Content-Type": "application/json",
@@ -90,13 +104,16 @@ def send_http_event(
             },
         )
 
-        with urllib.request.urlopen(req, timeout=2) as response:
+        with urllib.request.urlopen(req, timeout=OBSERVABILITY_EVENT_TIMEOUT) as response:
             if response.status != 200:
                 logger.debug(
                     f"Observability event returned {response.status} for {agent_name}"
                 )
 
-    except urllib.error.URLError as e:
+    except (urllib.error.URLError, ConnectionError, TimeoutError) as e:
+        # Retryable errors - let decorator handle retry
         logger.debug(f"Observability event failed for {agent_name}: {e}")
+        raise  # Re-raise for retry decorator
     except Exception as e:
+        # Non-retryable errors - fail silently
         logger.debug(f"Observability event error for {agent_name}: {e}")

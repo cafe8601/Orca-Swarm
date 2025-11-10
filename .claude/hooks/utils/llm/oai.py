@@ -11,6 +11,10 @@ import os
 import sys
 from dotenv import load_dotenv
 
+# Import logging for error tracking
+import logging
+logger = logging.getLogger(__name__)
+
 
 def prompt_llm(prompt_text):
     """

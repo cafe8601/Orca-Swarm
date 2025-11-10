@@ -7,8 +7,11 @@ that persists across sessions.
 
 import json
 import logging
+import re
 from pathlib import Path
 from typing import Dict, Any, Optional, List
+
+from ..exceptions import ValidationError, MemoryStoreError
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +38,37 @@ class ContextStore:
         self.storage_dir = Path(storage_dir)
         self.storage_dir.mkdir(parents=True, exist_ok=True)
 
+    def _sanitize_key(self, key: str) -> str:
+        """
+        Sanitize context key to prevent path traversal attacks.
+
+        Args:
+            key: Raw context key
+
+        Returns:
+            Sanitized key
+
+        Raises:
+            ValidationError: If key is invalid or dangerous
+        """
+        # Only allow alphanumeric, underscore, hyphen
+        safe_key = re.sub(r'[^a-zA-Z0-9_-]', '', key)
+
+        if not safe_key:
+            raise ValidationError(f"Invalid context key: '{key}' - must contain alphanumeric characters")
+
+        if safe_key != key:
+            raise ValidationError(
+                f"Invalid context key: '{key}' contains forbidden characters. "
+                f"Allowed: alphanumeric, underscore, hyphen"
+            )
+
+        # Prevent path traversal attempts
+        if '..' in key or '/' in key or '\\' in key:
+            raise ValidationError(f"Path traversal detected in context key: '{key}'")
+
+        return safe_key
+
     def save_context(
         self,
         context_key: str,
@@ -44,16 +78,31 @@ class ContextStore:
         Save persistent context.
 
         Args:
-            context_key: Context identifier
+            context_key: Context identifier (alphanumeric, underscore, hyphen only)
             context_data: Context data to store
+
+        Raises:
+            ValidationError: If context_key contains invalid characters
+            MemoryStoreError: If save operation fails
         """
-        context_file = self.storage_dir / f"{context_key}.json"
+        # Sanitize key to prevent path traversal
+        safe_key = self._sanitize_key(context_key)
+        context_file = self.storage_dir / f"{safe_key}.json"
+
+        # Verify path stays within storage_dir (defense in depth)
+        try:
+            resolved_path = context_file.resolve()
+            if not resolved_path.is_relative_to(self.storage_dir.resolve()):
+                raise ValidationError(f"Path traversal attempt detected: {context_key}")
+        except ValueError as e:
+            raise ValidationError(f"Invalid path: {context_key}") from e
 
         try:
             context_file.write_text(json.dumps(context_data, indent=2))
-            logger.info(f"Saved context: {context_key}")
+            logger.info(f"Saved context: {safe_key}")
         except Exception as exc:
-            logger.error(f"Failed to save context {context_key}: {exc}")
+            logger.error(f"Failed to save context {safe_key}: {exc}")
+            raise MemoryStoreError(f"Cannot save context: {exc}") from exc
 
     def load_context(self, context_key: str) -> Optional[Dict[str, Any]]:
         """
@@ -64,8 +113,20 @@ class ContextStore:
 
         Returns:
             Context data or None if not found
+
+        Raises:
+            ValidationError: If context_key is invalid
         """
-        context_file = self.storage_dir / f"{context_key}.json"
+        # Sanitize key
+        safe_key = self._sanitize_key(context_key)
+        context_file = self.storage_dir / f"{safe_key}.json"
+
+        # Verify path (defense in depth)
+        try:
+            if not context_file.resolve().is_relative_to(self.storage_dir.resolve()):
+                raise ValidationError(f"Path traversal attempt: {context_key}")
+        except ValueError as e:
+            raise ValidationError(f"Invalid path: {context_key}") from e
 
         if not context_file.exists():
             return None
