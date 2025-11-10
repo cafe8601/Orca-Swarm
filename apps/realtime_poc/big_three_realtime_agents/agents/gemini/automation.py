@@ -16,6 +16,7 @@ from rich.panel import Panel
 from ...config import GEMINI_MODEL
 from ...utils import console
 from ...utils.retry import retry_with_backoff
+from ...utils.circuit_breaker import get_circuit_breaker, CircuitBreakerError
 from ...timeouts import GEMINI_API_TIMEOUT
 from .functions import GeminiFunctionHandler
 from .screenshot_manager import ScreenshotManager
@@ -55,7 +56,12 @@ class BrowserAutomationLoop:
     )
     def _call_gemini_api_with_retry(self, contents, config):
         """
-        Call Gemini API with retry logic and timeout.
+        Call Gemini API with retry logic, timeout, and circuit breaker.
+
+        Features:
+        - Circuit breaker prevents cascading failures
+        - Automatic retry on transient failures
+        - Exponential backoff (2s, 4s, 8s)
 
         Args:
             contents: Conversation contents.
@@ -65,14 +71,28 @@ class BrowserAutomationLoop:
             API response.
 
         Raises:
+            CircuitBreakerError: If circuit is open.
             Exception: If all retry attempts fail.
         """
         self.logger.debug(f"Calling Gemini API (timeout: {GEMINI_API_TIMEOUT}s)")
-        return self.gemini_client.models.generate_content(
-            model=GEMINI_MODEL,
-            contents=contents,
-            config=config,
+
+        # Get circuit breaker for Gemini API
+        breaker = get_circuit_breaker(
+            name="gemini_api",
+            failure_threshold=5,
+            recovery_timeout=60.0,  # Longer for API recovery
+            logger=self.logger
         )
+
+        # Execute with circuit breaker protection
+        def api_call():
+            return self.gemini_client.models.generate_content(
+                model=GEMINI_MODEL,
+                contents=contents,
+                config=config,
+            )
+
+        return breaker.call(api_call)
 
     def run(self, task: str, max_turns: int = 30) -> str:
         """

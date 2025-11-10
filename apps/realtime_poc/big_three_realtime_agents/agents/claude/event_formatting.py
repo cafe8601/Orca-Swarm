@@ -14,6 +14,7 @@ import logging
 from ...config import OBSERVABILITY_SERVER_URL
 from ...timeouts import OBSERVABILITY_EVENT_TIMEOUT
 from ...utils.retry import retry_with_backoff
+from ...utils.circuit_breaker import get_circuit_breaker, CircuitBreakerError
 
 
 def build_event_data(
@@ -82,34 +83,50 @@ def send_http_event(
     event_data: dict, logger: logging.Logger, agent_name: str
 ) -> None:
     """
-    Send event data to observability server via HTTP with retry logic.
+    Send event data to observability server via HTTP with retry logic and circuit breaker.
 
     Features:
+    - Circuit breaker prevents cascading failures
     - Automatic retry on transient failures (network errors)
     - Fast failure with short delays (0.5s initial, 2 attempts max)
-    - Silent failure on non-retryable errors
+    - Silent failure on non-retryable errors or circuit open
 
     Args:
         event_data: Formatted event data.
         logger: Logger instance for debug messages.
         agent_name: Agent name for logging context.
     """
+    # Get circuit breaker for observability service
+    breaker = get_circuit_breaker(
+        name="observability_service",
+        failure_threshold=5,
+        recovery_timeout=30.0,
+        logger=logger
+    )
+
     try:
-        req = urllib.request.Request(
-            OBSERVABILITY_SERVER_URL,
-            data=json.dumps(event_data).encode("utf-8"),
-            headers={
-                "Content-Type": "application/json",
-                "User-Agent": "BigThreeAgents/1.0",
-            },
-        )
+        # Execute with circuit breaker protection
+        def send_request():
+            req = urllib.request.Request(
+                OBSERVABILITY_SERVER_URL,
+                data=json.dumps(event_data).encode("utf-8"),
+                headers={
+                    "Content-Type": "application/json",
+                    "User-Agent": "BigThreeAgents/1.0",
+                },
+            )
 
-        with urllib.request.urlopen(req, timeout=OBSERVABILITY_EVENT_TIMEOUT) as response:
-            if response.status != 200:
-                logger.debug(
-                    f"Observability event returned {response.status} for {agent_name}"
-                )
+            with urllib.request.urlopen(req, timeout=OBSERVABILITY_EVENT_TIMEOUT) as response:
+                if response.status != 200:
+                    logger.debug(
+                        f"Observability event returned {response.status} for {agent_name}"
+                    )
 
+        breaker.call(send_request)
+
+    except CircuitBreakerError as e:
+        # Circuit is open - fail silently for observability
+        logger.debug(f"Circuit breaker open for observability: {e}")
     except (urllib.error.URLError, ConnectionError, TimeoutError) as e:
         # Retryable errors - let decorator handle retry
         logger.debug(f"Observability event failed for {agent_name}: {e}")

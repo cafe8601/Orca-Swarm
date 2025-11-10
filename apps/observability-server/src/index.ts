@@ -17,6 +17,18 @@ initDatabase();
 // Store WebSocket clients
 const wsClients = new Set<any>();
 
+// Metrics collection
+const metrics = {
+  events_received_total: 0,
+  events_failed_total: 0,
+  websocket_connections_active: 0,
+  websocket_connections_total: 0,
+  websocket_disconnections_total: 0,
+  http_requests_total: 0,
+  http_requests_by_path: new Map<string, number>(),
+  server_start_time: Date.now(),
+};
+
 // SECURITY WARNING: This server currently has NO authentication or authorization!
 // CORS is set to '*' allowing all origins - suitable ONLY for development.
 // For production use:
@@ -35,6 +47,11 @@ const server = Bun.serve({
 
   async fetch(req: Request) {
     const url = new URL(req.url);
+
+    // Track HTTP requests
+    metrics.http_requests_total++;
+    const pathCount = metrics.http_requests_by_path.get(url.pathname) || 0;
+    metrics.http_requests_by_path.set(url.pathname, pathCount + 1);
 
     // Handle CORS
     const origin = req.headers.get('origin') || '*';
@@ -60,7 +77,73 @@ const server = Bun.serve({
     if (req.method === 'OPTIONS') {
       return new Response(null, { headers });
     }
-    
+
+    // GET /health - Health check endpoint
+    if (url.pathname === '/health' && req.method === 'GET') {
+      const uptime = (Date.now() - metrics.server_start_time) / 1000;
+      const health = {
+        status: 'healthy',
+        uptime_seconds: uptime,
+        websocket_clients: wsClients.size,
+        events_received: metrics.events_received_total,
+        timestamp: new Date().toISOString(),
+      };
+      return new Response(JSON.stringify(health), {
+        headers: { ...headers, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // GET /metrics - Prometheus metrics endpoint
+    if (url.pathname === '/metrics' && req.method === 'GET') {
+      const uptime = (Date.now() - metrics.server_start_time) / 1000;
+
+      // Generate Prometheus text format
+      const prometheusMetrics = [
+        '# HELP events_received_total Total number of events received',
+        '# TYPE events_received_total counter',
+        `events_received_total ${metrics.events_received_total}`,
+        '',
+        '# HELP events_failed_total Total number of failed event processing',
+        '# TYPE events_failed_total counter',
+        `events_failed_total ${metrics.events_failed_total}`,
+        '',
+        '# HELP websocket_connections_active Current active WebSocket connections',
+        '# TYPE websocket_connections_active gauge',
+        `websocket_connections_active ${wsClients.size}`,
+        '',
+        '# HELP websocket_connections_total Total WebSocket connections',
+        '# TYPE websocket_connections_total counter',
+        `websocket_connections_total ${metrics.websocket_connections_total}`,
+        '',
+        '# HELP websocket_disconnections_total Total WebSocket disconnections',
+        '# TYPE websocket_disconnections_total counter',
+        `websocket_disconnections_total ${metrics.websocket_disconnections_total}`,
+        '',
+        '# HELP http_requests_total Total HTTP requests',
+        '# TYPE http_requests_total counter',
+        `http_requests_total ${metrics.http_requests_total}`,
+        '',
+        '# HELP server_uptime_seconds Server uptime in seconds',
+        '# TYPE server_uptime_seconds gauge',
+        `server_uptime_seconds ${uptime}`,
+        '',
+      ];
+
+      // Add per-path metrics
+      if (metrics.http_requests_by_path.size > 0) {
+        prometheusMetrics.push('# HELP http_requests_by_path_total HTTP requests by path');
+        prometheusMetrics.push('# TYPE http_requests_by_path_total counter');
+        metrics.http_requests_by_path.forEach((count, path) => {
+          prometheusMetrics.push(`http_requests_by_path_total{path="${path}"} ${count}`);
+        });
+        prometheusMetrics.push('');
+      }
+
+      return new Response(prometheusMetrics.join('\n'), {
+        headers: { 'Content-Type': 'text/plain; version=0.0.4' }
+      });
+    }
+
     // POST /events - Receive new events
     if (url.pathname === '/events' && req.method === 'POST') {
       try {
@@ -68,14 +151,16 @@ const server = Bun.serve({
         
         // Validate required fields
         if (!event.source_app || !event.session_id || !event.hook_event_type || !event.payload) {
+          metrics.events_failed_total++;
           return new Response(JSON.stringify({ error: 'Missing required fields' }), {
             status: 400,
             headers: { ...headers, 'Content-Type': 'application/json' }
           });
         }
-        
+
         // Insert event into database
         const savedEvent = insertEvent(event);
+        metrics.events_received_total++;
         
         // Broadcast to all WebSocket clients
         const message = JSON.stringify({ type: 'event', data: savedEvent });
@@ -93,6 +178,7 @@ const server = Bun.serve({
         });
       } catch (error) {
         console.error('Error processing event:', error);
+        metrics.events_failed_total++;
         return new Response(JSON.stringify({ error: 'Invalid request' }), {
           status: 400,
           headers: { ...headers, 'Content-Type': 'application/json' }
@@ -311,25 +397,31 @@ const server = Bun.serve({
     open(ws) {
       console.log('WebSocket client connected');
       wsClients.add(ws);
-      
+      metrics.websocket_connections_total++;
+      metrics.websocket_connections_active = wsClients.size;
+
       // Send recent events on connection
       const events = getRecentEvents(50);
       ws.send(JSON.stringify({ type: 'initial', data: events }));
     },
-    
+
     message(ws, message) {
       // Handle any client messages if needed
       console.log('Received message:', message);
     },
-    
+
     close(ws) {
       console.log('WebSocket client disconnected');
       wsClients.delete(ws);
+      metrics.websocket_disconnections_total++;
+      metrics.websocket_connections_active = wsClients.size;
     },
-    
+
     error(ws, error) {
       console.error('WebSocket error:', error);
       wsClients.delete(ws);
+      metrics.websocket_disconnections_total++;
+      metrics.websocket_connections_active = wsClients.size;
     }
   }
 });

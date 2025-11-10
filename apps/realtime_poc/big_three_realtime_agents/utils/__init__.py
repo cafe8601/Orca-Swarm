@@ -12,6 +12,15 @@ from .retry import (
     retry_network_operation,
     retry_api_call,
 )
+from .circuit_breaker import (
+    CircuitBreaker,
+    CircuitBreakerError,
+    CircuitState,
+    circuit_breaker,
+    get_circuit_breaker,
+    get_all_circuit_breakers,
+    reset_all_circuit_breakers,
+)
 
 __all__ = [
     "AudioManager",
@@ -26,4 +35,11 @@ __all__ = [
     "RetryContext",
     "retry_network_operation",
     "retry_api_call",
+    "CircuitBreaker",
+    "CircuitBreakerError",
+    "CircuitState",
+    "circuit_breaker",
+    "get_circuit_breaker",
+    "get_all_circuit_breakers",
+    "reset_all_circuit_breakers",
 ]
