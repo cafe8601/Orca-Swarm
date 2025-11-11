@@ -143,11 +143,31 @@ class ExecutionEngine:
         self,
         tasks: List[WorkflowTask]
     ) -> List[Dict[str, Any]]:
-        """Execute tasks in parallel."""
-        # For now, simulate parallel with sequential
-        # Full async implementation requires more complexity
-        self.logger.warning("Parallel execution not fully implemented, using sequential")
-        return await self._execute_sequential(tasks)
+        """Execute tasks in parallel using asyncio.gather."""
+        self.logger.info(f"Executing {len(tasks)} tasks in parallel")
+
+        # Create tasks for parallel execution
+        task_coroutines = [self._execute_task(task) for task in tasks]
+
+        # Execute all tasks concurrently
+        results = await asyncio.gather(*task_coroutines, return_exceptions=True)
+
+        # Process results and handle exceptions
+        processed_results = []
+        for i, result in enumerate(results):
+            if isinstance(result, Exception):
+                self.logger.error(f"Task {tasks[i].task_id} failed with exception: {result}")
+                # Create error result
+                error_result = {
+                    "task_id": tasks[i].task_id,
+                    "status": "failed",
+                    "error": str(result)
+                }
+                processed_results.append(error_result)
+            else:
+                processed_results.append(result)
+
+        return processed_results
 
     async def _execute_task(self, task: WorkflowTask) -> Dict[str, Any]:
         """Execute a single task."""

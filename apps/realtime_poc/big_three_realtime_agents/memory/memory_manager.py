@@ -55,6 +55,7 @@ class MemoryManager:
         self.session = SessionMemory()
         self.workflow = WorkflowMemory(self.storage_dir / "workflows")
         self.context = ContextStore(self.storage_dir / "context")
+        self.learning = ContextStore(self.storage_dir / "learning")  # Reuse ContextStore for learning patterns
 
         logger.info("Memory manager initialized")
 
@@ -78,6 +79,8 @@ class MemoryManager:
             self.workflow.store_execution(key, value)
         elif memory_type == MemoryType.CONTEXT:
             self.context.save_context(key, value)
+        elif memory_type == MemoryType.LEARNING:
+            self.learning.save_context(key, value)
         else:
             logger.warning(f"Memory type '{memory_type}' not yet implemented")
 
@@ -102,6 +105,8 @@ class MemoryManager:
             return self.workflow.get_execution(key)
         elif memory_type == MemoryType.CONTEXT:
             return self.context.load_context(key)
+        elif memory_type == MemoryType.LEARNING:
+            return self.learning.load_context(key)
         else:
             logger.warning(f"Memory type '{memory_type}' not yet implemented")
             return None

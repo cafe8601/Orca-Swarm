@@ -145,11 +145,12 @@ class ContextStore:
 
     def delete_context(self, context_key: str) -> bool:
         """Delete a context."""
-        context_file = self.storage_dir / f"{context_key}.json"
+        safe_key = self._sanitize_key(context_key)
+        context_file = self.storage_dir / f"{safe_key}.json"
 
         if context_file.exists():
             context_file.unlink()
-            logger.info(f"Deleted context: {context_key}")
+            logger.info(f"Deleted context: {safe_key}")
             return True
 
         return False
