@@ -6,16 +6,18 @@
 # Core API Clients
 openai==1.54.0
 anthropic==0.39.0
-google-generativeai==0.8.0
+google-generativeai>=0.8.0  # Use latest version for Content/Part types
+claude-agent-sdk>=0.1.6  # Claude Agent SDK for Python
 
 # Browser Automation
 playwright==1.48.0
-playwright-stealth==1.0.0
+playwright-stealth==1.0.6
 
 # Audio Processing
-numpy==1.24.0
+numpy==1.26.4  # Updated for Python 3.12 compatibility (was 1.24.0)
 pydub==0.25.0
 sounddevice==0.4.6
+pyaudio==0.2.14  # Added for voice mode
 
 # WebSocket & Streaming
 websockets==12.0
@@ -29,6 +31,7 @@ click==8.1.0
 # CLI & UI
 rich==13.0.0
 typer==0.9.0
+pynput==1.7.7  # Keyboard input handling
 
 # Web Framework & Rate Limiting
 fastapi==0.109.0
@@ -44,16 +47,16 @@ cryptography==43.0.3  # Updated for CVE fixes (was 41.0.0)
 python-jose==3.3.0
 
 # RAG & Vector Database
-chromadb==0.4.0
-sentence-transformers==2.2.0
+chromadb==0.5.0  # Updated for Python 3.12 (was 0.4.0)
+sentence-transformers==2.7.0  # Updated for Python 3.12 (was 2.2.0)
 redis==5.0.0
 
-# Development Dependencies
-pytest==7.4.0
-pytest-asyncio==0.21.0
-pytest-mock==3.12.0
-pytest-cov==4.1.0
-black==23.0.0
-ruff==0.1.0
-mypy==1.7.0
-pre-commit==3.5.0
+# Development Dependencies (Updated for Python 3.12)
+pytest==8.3.0  # Updated (was 7.4.0)
+pytest-asyncio==0.24.0  # Updated (was 0.21.0)
+pytest-mock==3.14.0  # Updated (was 3.12.0)
+pytest-cov==6.0.0  # Updated (was 4.1.0)
+black==24.10.0  # Updated for Python 3.12 (was 23.0.0)
+ruff==0.8.0  # Updated (was 0.1.0)
+mypy==1.13.0  # Updated for Python 3.12 (was 1.7.0)
+pre-commit==4.0.0  # Updated (was 3.5.0)

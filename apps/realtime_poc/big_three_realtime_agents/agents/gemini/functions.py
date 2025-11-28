@@ -9,7 +9,8 @@ import logging
 from typing import List, Tuple, Dict, Any
 
 from playwright.sync_api import Page
-from google.genai import types
+from google import generativeai
+from google.generativeai import types, protos
 
 from .browser_actions import BrowserActionExecutor
 
@@ -58,7 +59,7 @@ class GeminiFunctionHandler:
 
     def get_function_responses(
         self, results: List[Tuple[str, Dict[str, Any]]]
-    ) -> List[types.FunctionResponse]:
+    ) -> List[protos.FunctionResponse]:
         """
         Generate function responses with current screenshot.
 
@@ -66,7 +67,7 @@ class GeminiFunctionHandler:
             results: List of (function_name, result_dict) tuples.
 
         Returns:
-            List of Gemini FunctionResponse objects.
+            List of Gemini FunctionResponse objects (using protos).
         """
         screenshot_bytes = self.page.screenshot(type="png")
         current_url = self.page.url
@@ -75,18 +76,20 @@ class GeminiFunctionHandler:
         for name, result in results:
             response_data = {"url": current_url}
             response_data.update(result)
+
+            # Create FunctionResponse using protos
+            # Note: In google-generativeai 0.8.5, FunctionResponse structure is:
+            # - name: function name
+            # - response: dict of response data
+            # Screenshot is attached as a separate Part in the content
             function_responses.append(
-                types.FunctionResponse(
+                protos.FunctionResponse(
                     name=name,
                     response=response_data,
-                    parts=[
-                        types.FunctionResponsePart(
-                            inline_data=types.FunctionResponseBlob(
-                                mime_type="image/png", data=screenshot_bytes
-                            )
-                        )
-                    ],
                 )
             )
+
+            # Add screenshot as separate part in the calling code
+            # (automation.py handles this)
 
         return function_responses

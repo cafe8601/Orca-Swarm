@@ -28,11 +28,7 @@ from ...config import (
 from ...utils import AgentRegistry
 from ..base import BaseAgent
 from .automation import BrowserAutomationLoop
-from .screenshot_manager import (
-    initialize_screenshot_state,
-    navigate_to_start_url,
-    register_browser_agent,
-)
+from .screenshot_manager import ScreenshotManager
 
 
 class GeminiBrowserAgent(BaseAgent):
@@ -51,14 +47,19 @@ class GeminiBrowserAgent(BaseAgent):
         if not GEMINI_API_KEY:
             raise ValueError("GEMINI_API_KEY environment variable not set")
 
-        from google import genai
-        self.gemini_client = genai.Client(api_key=GEMINI_API_KEY)
+        import google.generativeai as genai
+        genai.configure(api_key=GEMINI_API_KEY)
+        self.gemini_client = genai.GenerativeModel(GEMINI_MODEL)
 
         self.playwright = None
         self.browser = None
         self.context = None
         self.page = None
-        self.screenshot_dir, self.screenshot_counter = initialize_screenshot_state(self.session_id)
+
+        # Initialize screenshot directory
+        self.screenshot_dir = AGENTS_BASE_DIR / "gemini" / "screenshots" / self.session_id
+        self.screenshot_dir.mkdir(parents=True, exist_ok=True)
+        self.screenshot_counter = 0
 
         self.registry = AgentRegistry(
             registry_path=GEMINI_REGISTRY_PATH,
@@ -109,12 +110,16 @@ class GeminiBrowserAgent(BaseAgent):
             self.logger.info(f"Session ID: {self.session_id}")
 
             if agent_name:
-                register_browser_agent(self.registry, agent_name, self.session_id)
+                # Register agent in registry
+                self.registry.set_session(agent_name, self.session_id)
 
             if not self.page:
                 self.setup()
 
-            navigate_to_start_url(self.page, url, BROWSER_TOOL_STARTING_URL, self.logger)
+            # Navigate to starting URL
+            start_url = url or BROWSER_TOOL_STARTING_URL
+            self.logger.info(f"Navigating to {start_url}")
+            self.page.goto(start_url)
 
             automation_loop = BrowserAutomationLoop(
                 gemini_client=self.gemini_client,

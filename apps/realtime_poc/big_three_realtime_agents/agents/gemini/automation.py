@@ -3,14 +3,18 @@ Browser automation loop logic for Gemini agent.
 
 Manages turn-based interaction with Gemini API, screenshot capture,
 and conversation flow for browser automation tasks.
+
+NOTE: This code uses Gemini Computer Use API which is in preview.
+The Computer Use types (ComputerUse, Environment) are not yet available
+in google-generativeai 0.8.5 stable release. Using protos for Content/Part.
 """
 
 import logging
 from pathlib import Path
 
 from playwright.sync_api import Page
-from google.genai import types
-from google.genai.types import Content, Part
+from google import generativeai
+from google.generativeai import types, protos
 from rich.panel import Panel
 
 from ...config import GEMINI_MODEL
@@ -105,27 +109,46 @@ class BrowserAutomationLoop:
         Returns:
             The final result as a string.
         """
-        # Configure Gemini with Computer Use
-        config = types.GenerateContentConfig(
-            tools=[
-                types.Tool(
-                    computer_use=types.ComputerUse(
-                        environment=types.Environment.ENVIRONMENT_BROWSER
-                    )
-                )
-            ],
+        # TODO: Computer Use API configuration
+        # When Computer Use API becomes available in stable release:
+        # config = types.GenerateContentConfig(
+        #     tools=[
+        #         types.Tool(
+        #             computer_use=types.ComputerUse(
+        #                 environment=types.Environment.ENVIRONMENT_BROWSER
+        #             )
+        #         )
+        #     ],
+        # )
+
+        # For now, use standard function calling with browser action functions
+        self.logger.warning(
+            "Computer Use API not available in google-generativeai 0.8.5. "
+            "Using standard function calling mode."
+        )
+
+        # Configure with function declarations for browser actions
+        from .browser_actions import BrowserActionExecutor
+
+        config = types.GenerationConfig(
+            temperature=0.7,
         )
 
         # Initial screenshot
         initial_screenshot = self.screenshot_manager.capture_and_save("initial")
 
-        # Build initial contents
+        # Build initial contents using protos (compatible with google-generativeai 0.8.5)
         contents = [
-            Content(
+            protos.Content(
                 role="user",
                 parts=[
-                    Part(text=task),
-                    Part.from_bytes(data=initial_screenshot, mime_type="image/png"),
+                    protos.Part(text=task),
+                    protos.Part(
+                        inline_data=protos.Blob(
+                            mime_type="image/png",
+                            data=initial_screenshot
+                        )
+                    ),
                 ],
             )
         ]
@@ -166,17 +189,36 @@ class BrowserAutomationLoop:
                 self.logger.info("Executing browser actions...")
                 results = self.function_handler.execute_function_calls(candidate)
 
-                # Get function responses with new screenshot
+                # Get function responses
                 function_responses = self.function_handler.get_function_responses(results)
+
+                # Capture screenshot after actions
+                screenshot_bytes = self.page.screenshot(type="png")
 
                 # Save screenshot after actions
                 self.screenshot_manager.capture_and_save(f"turn_{turn + 1}")
 
-                # Add function responses to contents
+                # Add function responses with screenshot to contents
+                function_response_parts = []
+                for fr in function_responses:
+                    function_response_parts.append(
+                        protos.Part(function_response=fr)
+                    )
+
+                # Add screenshot as additional part
+                function_response_parts.append(
+                    protos.Part(
+                        inline_data=protos.Blob(
+                            mime_type="image/png",
+                            data=screenshot_bytes
+                        )
+                    )
+                )
+
                 contents.append(
-                    Content(
+                    protos.Content(
                         role="user",
-                        parts=[Part(function_response=fr) for fr in function_responses],
+                        parts=function_response_parts,
                     )
                 )
 

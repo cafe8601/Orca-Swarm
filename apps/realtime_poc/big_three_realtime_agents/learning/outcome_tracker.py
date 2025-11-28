@@ -7,7 +7,7 @@ Tracks success/failure outcomes for pattern analysis and learning.
 import json
 import logging
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from datetime import datetime
 
 logger = logging.getLogger(__name__)

@@ -13,6 +13,16 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 
+def pytest_addoption(parser):
+    """Add custom pytest command line options."""
+    parser.addoption(
+        "--run-expensive",
+        action="store_true",
+        default=False,
+        help="run expensive tests that incur API costs"
+    )
+
+
 @pytest.fixture(scope="session")
 def event_loop():
     """Create an event loop for the test session."""

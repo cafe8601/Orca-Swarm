@@ -6,6 +6,17 @@ Centralizes all environment variables, constants, and configuration settings.
 
 import os
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+# Look for .env in project root (3 levels up from this file)
+config_dir = Path(__file__).parent.parent.parent.parent
+dotenv_path = config_dir / ".env"
+if dotenv_path.exists():
+    load_dotenv(dotenv_path)
+else:
+    # Fallback: try current directory
+    load_dotenv()
 
 # ================================================================
 # OpenAI Realtime API Configuration

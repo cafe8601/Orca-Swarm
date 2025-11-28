@@ -25,7 +25,15 @@ import logging
 from typing import Optional
 
 import numpy as np
-import pyaudio
+
+# Make pyaudio optional for environments without audio hardware
+try:
+    import pyaudio
+    PYAUDIO_AVAILABLE = True
+except ImportError:
+    PYAUDIO_AVAILABLE = False
+    pyaudio = None
+    print("⚠️  Warning: pyaudio not available. Audio features will be disabled.")
 
 from ..config import CHUNK_SIZE, FORMAT, CHANNELS, RATE
 
@@ -62,8 +70,8 @@ class AudioManager:
             logger: Optional logger instance. Creates default if not provided.
         """
         self.logger = logger or logging.getLogger("AudioManager")
-        self.audio_interface: Optional[pyaudio.PyAudio] = None
-        self.audio_stream: Optional[pyaudio.Stream] = None
+        self.audio_interface = None
+        self.audio_stream = None
 
     def setup(self, input_enabled: bool = True, output_enabled: bool = True) -> None:
         """
@@ -84,6 +92,12 @@ class AudioManager:
         if not input_enabled and not output_enabled:
             self.logger.debug("Audio disabled, skipping setup")
             return
+
+        if not PYAUDIO_AVAILABLE or pyaudio is None:
+            raise RuntimeError(
+                "pyaudio not available. Install with: pip install pyaudio\n"
+                "Or activate virtual environment: source .venv/bin/activate"
+            )
 
         self.logger.info("Setting up audio interface...")
         try:

@@ -101,31 +101,19 @@ class WebSocketHandlers:
             "default_modalities", ["text", "audio"]
         )
 
+        # GA version minimal session config - only type, instructions, and tools supported
         session_config = {
             "type": "session.update",
             "session": {
+                "type": "realtime",  # REQUIRED: 'realtime', 'transcription', or 'translation'
                 "instructions": instructions,
-                "modalities": output_modalities,
-                "voice": self.output_config.get("voice", "shimmer"),
-                "turn_detection": {
-                    "type": "server_vad",
-                    "threshold": 0.5,
-                    "prefix_padding_ms": 300,
-                    "silence_duration_ms": 500,
-                },
+                "tools": self.output_config.get("tools", []),
             },
         }
 
-        self.logger.info("Sending session config...")
+        self.logger.info("Sending session config with tools...")
         ws.send(json.dumps(session_config))
-
-        # Update tools
-        tool_config = {
-            "type": "session.update",
-            "session": {"tools": self.output_config.get("tools", [])},
-        }
-        ws.send(json.dumps(tool_config))
-        self.logger.info("Tools configured")
+        self.logger.info("Session configured successfully")
 
     def on_message(self, ws: Any, message: str) -> None:
         """

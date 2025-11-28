@@ -15,7 +15,12 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
+    "@hono/node-server": "^1.19.6",
+    "@types/node": "^24.10.0",
+    "hono": "^4.10.4",
     "sqlite": "^5.1.1",
-    "sqlite3": "^5.1.7"
+    "sqlite3": "^5.1.7",
+    "tsx": "^4.20.6",
+    "ws": "^8.18.3"
   }
 }

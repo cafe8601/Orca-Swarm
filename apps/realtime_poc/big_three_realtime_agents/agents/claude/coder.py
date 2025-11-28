@@ -46,6 +46,9 @@ class ClaudeCodeAgenticCoder(BaseAgent):
         # Initialize registry manager
         self.registry_manager = AgentRegistryManager(self.logger)
 
+        # Add registry alias for backward compatibility
+        self.registry = self.registry_manager
+
         # Initialize sub-managers
         self.prompt_manager = PromptManager()
         self.observability_manager = ObservabilityManager(self.logger)
