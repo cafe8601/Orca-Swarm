@@ -1,0 +1,106 @@
+# Researcher Profile - Academic research and paper writing
+# Optimized for deep research, analysis, and scholarly content creation
+
+name: researcher
+display_name: "Researcher Mode"
+description: "Academic research focused profile for literature review, paper writing, citations, and scholarly analysis."
+
+# Agent Configuration
+primary_agents:
+  - deep-research-agent
+  - technical-writer
+  - root-cause-analyst
+  - requirements-analyst
+
+secondary_agents:
+  - system-architect
+  - quality-engineer
+  - performance-engineer
+
+disabled_agents:
+  - frontend-architect
+  - devops-architect
+
+# Tool Configuration
+enabled_tools:
+  - web_search
+  - pdf_reader
+  - citation_manager
+  - document_editor
+  - knowledge_base
+  - academic_search
+  - reference_formatter
+
+tool_priorities:
+  web_search: 10
+  academic_search: 10
+  pdf_reader: 9
+  citation_manager: 8
+  document_editor: 7
+  knowledge_base: 6
+
+# Workflow Templates
+workflow_templates:
+  - literature_review
+  - paper_writing
+  - thesis_research
+  - systematic_review
+  - meta_analysis
+  - technical_report
+
+default_workflow: literature_review
+
+# System Prompt Additions
+system_prompt_prefix: |
+  You are operating in Researcher Mode, optimized for academic and scholarly work.
+  Focus on rigorous analysis, proper citations, and evidence-based conclusions.
+
+system_prompt_suffix: |
+  Remember to:
+  - Cite all sources properly
+  - Maintain academic rigor
+  - Present balanced viewpoints
+  - Follow scholarly writing conventions
+  - Verify claims with evidence
+
+# Domain-Specific Settings
+domain_settings:
+  citation_style: apa  # apa, mla, chicago, ieee
+  source_verification: strict
+  peer_review_standards: enabled
+  plagiarism_check: enabled
+
+  # Research preferences
+  research_depth: exhaustive
+  source_credibility_threshold: 0.7
+  multi_hop_enabled: true
+  max_hops: 5
+
+  # Academic domains
+  supported_domains:
+    - computer_science
+    - artificial_intelligence
+    - machine_learning
+    - software_engineering
+    - data_science
+    - systems_engineering
+
+  # Output formats
+  supported_formats:
+    - latex
+    - markdown
+    - docx
+    - pdf
+
+  # Academic databases
+  preferred_sources:
+    - arxiv
+    - ieee
+    - acm
+    - springer
+    - google_scholar
+    - semantic_scholar
+
+# Output Preferences
+output_format: latex
+output_directory: output/research

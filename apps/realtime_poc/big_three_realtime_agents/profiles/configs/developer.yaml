@@ -1,0 +1,95 @@
+# Developer Profile - Default profile for software development tasks
+# Optimized for coding, debugging, and technical implementation
+
+name: developer
+display_name: "Developer Mode"
+description: "Software development focused profile for coding, debugging, architecture design, and technical implementation."
+
+# Agent Configuration
+primary_agents:
+  - python-expert
+  - backend-architect
+  - frontend-architect
+  - quality-engineer
+  - refactoring-expert
+
+secondary_agents:
+  - system-architect
+  - performance-engineer
+  - security-engineer
+  - devops-architect
+  - root-cause-analyst
+
+disabled_agents:
+  - business-panel-experts
+  - deep-research-agent
+
+# Tool Configuration
+enabled_tools:
+  - code_editor
+  - terminal
+  - file_browser
+  - git_integration
+  - debugger
+  - linter
+  - formatter
+  - test_runner
+
+tool_priorities:
+  code_editor: 10
+  terminal: 9
+  debugger: 8
+  test_runner: 7
+  git_integration: 6
+
+# Workflow Templates
+workflow_templates:
+  - feature_development
+  - bug_fix
+  - code_review
+  - refactoring
+  - testing
+
+default_workflow: feature_development
+
+# System Prompt Additions
+system_prompt_prefix: |
+  You are operating in Developer Mode, optimized for software development tasks.
+  Focus on code quality, best practices, and efficient implementation.
+
+system_prompt_suffix: |
+  Remember to:
+  - Write clean, maintainable code
+  - Follow project conventions and patterns
+  - Include appropriate error handling
+  - Consider edge cases and testing
+
+# Domain-Specific Settings
+domain_settings:
+  code_style: strict
+  testing_required: true
+  documentation_level: inline
+  review_depth: thorough
+  performance_focus: balanced
+  security_checks: enabled
+
+  # Language preferences
+  preferred_languages:
+    - python
+    - typescript
+    - javascript
+
+  # Framework preferences
+  preferred_frameworks:
+    backend:
+      - fastapi
+      - express
+      - django
+    frontend:
+      - react
+      - vue
+      - nextjs
+
+# Output Preferences
+output_format: markdown
+output_directory: output/developer

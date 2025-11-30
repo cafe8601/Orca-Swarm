@@ -1,591 +1,251 @@
-# Multi-Agent Learning System
+# Multi-Agent Learning System v5.0
 
-> 🤖 음성으로 제어하는 통합 AI 에이전트 오케스트레이션 시스템 + 159개의 전문화된 AI 에이전트 풀 + 실시간 Observability 대시보드
+**자율적 멀티에이전트 오케스트레이션 시스템**
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![Observability](https://img.shields.io/badge/Observability-Integrated-green.svg)](OBSERVABILITY_GUIDE.md)
+사용자 요청(텍스트/음성)을 받아 AI 에이전트들이 협업하여 자율적으로 작업을 완료합니다.
 
 ---
 
-## 📋 목차
+## 시스템 개요
 
-- [프로젝트 개요](#-프로젝트-개요)
-- [주요 기능](#-주요-기능)
-- [시스템 아키텍처](#-시스템-아키텍처)
-- [디렉토리 구조](#-디렉토리-구조)
-- [빠른 시작](#-빠른-시작)
-- [Observability 대시보드](#-observability-대시보드)
-- [컴포넌트 상세](#-컴포넌트-상세)
-- [에이전트 풀](#-에이전트-풀)
-- [문서](#-문서)
+```
+[사용자 요청] → [OpenAI Orchestrator] → [전문 에이전트들] → [작업 완료]
+       ↑                                                    ↓
+       └──────────────── [결과 보고] ←─────────────────────┘
+```
+
+### 핵심 구성
+
+| 구성 요소 | 역할 | 기술 |
+|-----------|------|------|
+| **OpenAI Realtime Voice Agent** | 오케스트레이터 (지휘자) | OpenAI Realtime API, WebSocket |
+| **Claude Agentic Coder** | 코드 작성/수정 | Claude API / Claude Max |
+| **Gemini Browser Agent** | 웹 브라우저 자동화 | Gemini API, Playwright |
+| **Agent Pool** | 154개 전문가 에이전트 | Markdown 정의, 동적 로딩 |
 
 ---
 
-## 🎯 프로젝트 개요
+## 빠른 시작
 
-Multi-Agent Learning System은 두 가지 핵심 시스템으로 구성됩니다:
-
-### 1. Big Three Realtime Agents
-음성이나 텍스트로 명령을 내리면 자동으로 **코딩**과 **브라우저 자동화** 작업을 수행하는 통합 AI 에이전트 오케스트레이션 시스템입니다.
-
-**핵심 에이전트:**
-- 🎙️ **OpenAI Realtime Voice Agent** - 음성 대화 및 오케스트레이션 담당
-- 💻 **Claude Code Agentic Coder** - 소프트웨어 개발 및 코딩 담당
-- 🌐 **Gemini Browser Agent** - 웹 브라우저 자동화 담당
-
-### 2. Agent Pool System v2.0
-프로덕션 환경에서 사용 가능한 **159개의 전문화된 AI 에이전트** 모음입니다.
-
-**티어 구조:**
-- ✅ **Tier 1**: 20개의 검증된 프로덕션 코어 에이전트
-- 📦 **Tier 2**: ~100개의 전문화된 에이전트 (11개 카테고리)
-- 🧪 **Tier 3**: ~40개의 실험적 에이전트 (4개 카테고리)
-
----
-
-## ✨ 주요 기능
-
-### Big Three Realtime Agents
-- ✅ **음성 제어**: 자연어로 복잡한 개발 작업 지시
-- ✅ **실시간 스트리밍**: 에이전트 작업 진행상황 실시간 확인
-- ✅ **세션 연속성**: 각 에이전트는 독립적인 세션 유지
-- ✅ **브라우저 자동화**: Playwright + Gemini Computer Use API
-- ✅ **자동 코드 생성**: Claude Code SDK 기반 소프트웨어 개발
-- ✅ **레지스트리 관리**: 모든 에이전트 세션 추적 및 재사용
-- ✅ **실시간 Observability**: 웹 대시보드로 모든 에이전트 활동 모니터링 (NEW)
-
-### Agent Pool System
-- ✅ **100% 독립 실행**: Context Manager 의존성 없음
-- ✅ **실용적 메트릭**: 상황별 목표 설정 (critical/standard/legacy)
-- ✅ **우아한 실패처리**: MCP 서버 없이도 작동
-- ✅ **실행 가능한 로직**: 구체적인 bash 명령어 및 조건문
-- ✅ **자동 검증**: 8단계 품질 검사
-
----
-
-## 🏗️ 시스템 아키텍처
-
-### Big Three 작업 흐름
-
-```
-사용자 (음성/텍스트)
-    ↓
-OpenAI Realtime Voice Agent (오케스트레이터)
-    ↓
-    ├─→ Claude Code Agent (소프트웨어 개발)
-    │       ↓
-    │   작업 디렉토리 (apps/content-gen/)
-    │       ↓
-    │   코드 생성/수정
-    │
-    └─→ Gemini Browser Agent (브라우저 자동화)
-            ↓
-        Playwright 브라우저
-            ↓
-        웹 검증/자동화
-```
-
-### Agent Pool 구조
-
-```
-Tier 1 (Core) - 20개
-    └─→ 프로덕션 검증 완료, 즉시 사용 가능
-
-Tier 2 (Specialized) - ~100개
-    ├─→ Languages: rust, go, java, kotlin, etc.
-    ├─→ Frameworks: nextjs, django, rails, etc.
-    ├─→ Infrastructure: terraform, k8s, sre, etc.
-    ├─→ Quality: testing, performance, accessibility
-    ├─→ Security: penetration, compliance, audit
-    ├─→ Data/AI: mlops, data-science, analytics
-    └─→ 5+ more categories...
-
-Tier 3 (Experimental) - ~40개
-    ├─→ Blockchain/Fintech
-    ├─→ Gaming (Unity, Minecraft)
-    ├─→ Emerging Tech (Quantum, Web3)
-    └─→ Niche (WordPress, SEO)
-```
-
----
-
-## 📂 디렉토리 구조
-
-```
-multi-agent-learning/
-│
-├── apps/
-│   ├── content-gen/              # 에이전트 작업 디렉토리
-│   │   ├── agents/              # 에이전트 세션 레지스트리
-│   │   │   ├── claude_code/    # Claude 에이전트 세션
-│   │   │   └── gemini/         # Gemini 에이전트 세션
-│   │   ├── backend/            # 백엔드 코드 (에이전트 작업물)
-│   │   ├── frontend/           # 프론트엔드 코드 (에이전트 작업물)
-│   │   └── specs/              # 프로젝트 사양
-│   │
-│   └── realtime-poc/           # Big Three 메인 시스템
-│       ├── big_three_realtime_agents/  # 리팩토링된 모듈화 구조
-│       │   ├── workflow/       # 워크플로우 관리
-│       │   ├── memory/         # 메모리 시스템
-│       │   ├── learning/       # 학습 시스템
-│       │   ├── security/       # 보안 시스템
-│       │   └── utils/          # 유틸리티
-│       └── prompts/            # 시스템 프롬프트
-│
-├── agentpool/                  # Agent Pool System v2.0
-│   ├── tier1-core/            # 20개 검증된 코어 에이전트
-│   ├── tier2-specialized/     # ~100개 전문화 에이전트
-│   │   ├── languages/
-│   │   ├── frameworks/
-│   │   ├── infrastructure/
-│   │   ├── quality/
-│   │   ├── security/
-│   │   ├── data-ai/
-│   │   ├── devtools/
-│   │   ├── specialized/
-│   │   ├── business/
-│   │   ├── orchestration/
-│   │   └── research/
-│   ├── tier3-experimental/    # ~40개 실험적 에이전트
-│   ├── _templates/            # 에이전트 생성 템플릿
-│   └── [Documentation]/       # 가이드 문서
-│
-├── claudedocs/                 # 프로젝트 문서
-│   ├── quality_enhancement_final_report.md
-│   ├── COMPLETE_SYSTEMS_SUMMARY.md
-│   └── ...
-│
-├── .env.sample                 # 환경 변수 템플릿
-├── .gitignore
-└── refactoring.md             # 시스템 상세 분석 문서
-```
-
----
-
-## 🚀 빠른 시작
-
-### 사전 요구사항
+### 1. 환경 설정
 
 ```bash
-# Python 3.11 이상
-python --version
+# 프로젝트 복제 후 디렉토리 이동
+cd "multiagent v4 - all"
 
-# Node.js 18 이상 (Claude Code용)
-node --version
+# Python 가상환경 생성 (3.10+ 권장)
+python -m venv .venv
+source .venv/bin/activate  # Linux/Mac
+# .venv\Scripts\activate   # Windows
 
-# 필수 API 키
-OPENAI_API_KEY=your_openai_key
-ANTHROPIC_API_KEY=your_anthropic_key
-GEMINI_API_KEY=your_gemini_key
-```
-
-### 설치
-
-#### 🚀 방법 1: 자동 설치 (권장)
-
-```bash
-# 1. 저장소 클론
-git clone https://github.com/cafe8601/-multi-agent-learning.git
-cd multi-agent-learning
-
-# 2. 자동 설치 스크립트 실행
-./setup.sh
-
-# 3. .env 파일 편집 (API 키 입력)
-nano .env  # 또는 원하는 에디터 사용
-```
-
-**setup.sh가 자동으로 처리하는 것**:
-- ✅ Python 버전 확인
-- ✅ 가상 환경 생성
-- ✅ 모든 Python 의존성 설치
-- ✅ Playwright 브라우저 설치
-- ✅ 필요한 디렉토리 생성
-- ✅ .env 파일 생성
-
-#### 📦 방법 2: 수동 설치
-
-```bash
-# 1. 저장소 클론
-git clone https://github.com/cafe8601/-multi-agent-learning.git
-cd multi-agent-learning
-
-# 2. 환경 변수 설정
-cp .env.sample .env
-# .env 파일을 열어 API 키 입력
-
-# 3. 의존성 설치
+# 의존성 설치
 pip install -r requirements.txt
 
-# 4. Playwright 브라우저 설치
+# Playwright 브라우저 설치 (Gemini Browser Agent용)
 playwright install chromium
-playwright install-deps chromium  # Linux only
 ```
 
-#### 🎤 방법 3: 음성 모드 사용 시
-
-음성 모드를 사용하려면 추가 오디오 설정이 필요합니다.
+### 2. API 키 설정
 
 ```bash
-# 오디오 설정 가이드 확인
-cat AUDIO_SETUP_GUIDE.md
+# .env 파일 생성
+cp .env.sample .env
 
-# 오디오 테스트 실행
-python scripts/test_audio.py
+# .env 파일 편집하여 API 키 설정
 ```
 
-**참고**: 음성 모드는 **선택사항**입니다. 텍스트 모드만으로도 모든 기능 사용 가능합니다.
+**권장 설정 (최소 비용):**
 
-### Big Three 실행
+| 서비스 | 설정 | 비용 |
+|--------|------|------|
+| **Claude Agent SDK** | Claude Max 구독 사용 | **무료** |
+| **OpenAI/Gemini** | OpenRouter 사용 | 저렴 |
 
 ```bash
-cd apps/realtime-poc
+# .env 예시 (Claude Max + OpenRouter)
+CLAUDE_MODE=max
+ANTHROPIC_API_KEY=              # 비워두기 - Claude Max 자동 사용
+
+OPENROUTER_API_KEY=sk-or-v1-xxxxx
+OPENAI_API_KEY=sk-or-v1-xxxxx   # OpenRouter 키와 동일
+OPENAI_BASE_URL=https://openrouter.ai/api/v1
+GEMINI_API_KEY=sk-or-v1-xxxxx   # OpenRouter 키와 동일
+```
+
+**API 키 획득:**
+- OpenRouter: https://openrouter.ai/keys (OpenAI, Gemini 등 통합)
+
+### 3. 실행
+
+```bash
+# 간편 실행 (메뉴 방식)
+./START_HERE.sh
+
+# 또는 직접 실행
+cd apps/realtime_poc
 python -m big_three_realtime_agents.main
 ```
 
-음성 또는 텍스트로 명령을 내리면:
-- "Create a simple web app" → Claude Code가 자동으로 코드 생성
-- "Test the login form" → Gemini Browser가 자동으로 브라우저 테스트 실행
+---
 
-### Agent Pool 사용
+## 실행 모드
 
-에이전트 파일을 Claude 설정 디렉토리에 복사:
+### 음성 모드
+```bash
+python -m big_three_realtime_agents.main --voice
+```
+마이크로 자연어 명령을 내립니다.
+
+### 텍스트 모드
+```bash
+python -m big_three_realtime_agents.main
+```
+키보드로 명령을 입력합니다.
+
+### 자동 프롬프트 모드
+```bash
+python -m big_three_realtime_agents.main --prompt "웹사이트를 만들어줘"
+```
+단일 명령을 자동 실행합니다.
+
+### 옵션
+```bash
+--input text|audio    # 입력 모드
+--output text|audio   # 출력 모드
+--mini               # 경량 모델 사용
+--timeout 300        # 타임아웃 (초)
+```
+
+---
+
+## 프로젝트 구조
+
+```
+multiagent v4 - all/
+├── apps/
+│   ├── realtime_poc/              # Big Three 에이전트 (메인)
+│   │   ├── big_three_realtime_agents/
+│   │   │   ├── main.py            # 진입점
+│   │   │   ├── agents/            # 에이전트 모듈들
+│   │   │   │   ├── openai/        # 오케스트레이터
+│   │   │   │   ├── claude/        # 코딩 에이전트
+│   │   │   │   ├── gemini/        # 브라우저 에이전트
+│   │   │   │   └── pool/          # 에이전트 풀
+│   │   │   ├── memory/            # 메모리 시스템
+│   │   │   ├── learning/          # 학습 시스템
+│   │   │   ├── workflow/          # 워크플로우
+│   │   │   └── security/          # 보안
+│   │   └── ...
+│   │
+│   ├── observability-server/       # 모니터링 서버
+│   └── observability-client/       # 대시보드 UI
+│
+├── agentpool/                      # 154개 에이전트 정의
+│   ├── agents-tier1-core/          # Tier 1: 핵심 (20개)
+│   ├── agents-tier2-specialized/   # Tier 2: 전문 (120개)
+│   └── agents-tier3-experimental/  # Tier 3: 실험 (14개)
+│
+├── monitoring/                     # Docker 모니터링 스택
+│
+├── START_HERE.sh                   # 간편 실행 스크립트
+├── RUN_ME.sh                       # 대체 실행 스크립트
+├── setup.sh                        # 환경 설정 스크립트
+├── .env.sample                     # 환경 변수 템플릿
+└── requirements.txt                # Python 의존성
+```
+
+---
+
+## 에이전트 풀 (154개)
+
+### Tier 1: Core (20개) - 프로덕션 검증 완료
+- backend-developer, frontend-developer
+- python-pro, devops-engineer
+- qa-expert, security-auditor
+- 등...
+
+### Tier 2: Specialized (~120개) - 전문 분야
+- **Languages**: Rust, Go, Java, Kotlin, Scala...
+- **Frameworks**: Next.js, Django, Rails, Laravel...
+- **Infrastructure**: Terraform, K8s, SRE...
+- **Quality**: Testing, Performance...
+- **Security**: Penetration, Compliance...
+- **Data/AI**: MLOps, Data Science...
+
+### Tier 3: Experimental (~14개) - 실험적
+- Blockchain, Gaming, Emerging Tech...
+
+---
+
+## 사용 예시
+
+### 예시 1: 웹 앱 개발
+```
+사용자: "Python으로 할 일 관리 앱을 만들어줘"
+
+시스템 동작:
+1. [오케스트레이터] 요청 분석 → 코딩 작업으로 판단
+2. [Claude Agent] 프로젝트 구조 설계
+3. [Claude Agent] 코드 파일 생성
+4. [Claude Agent] 테스트 코드 작성
+5. [오케스트레이터] 결과 통합 및 보고
+
+결과: apps/content-gen/ 디렉토리에 완성된 앱
+```
+
+### 예시 2: 웹 리서치
+```
+사용자: "최신 AI 트렌드를 조사해줘"
+
+시스템 동작:
+1. [오케스트레이터] 요청 분석 → 브라우저 작업으로 판단
+2. [Gemini Browser] 검색 엔진 접속
+3. [Gemini Browser] 관련 기사/논문 수집
+4. [오케스트레이터] 결과 요약 및 보고
+```
+
+---
+
+## 모니터링 대시보드
 
 ```bash
-# Tier 1 코어 에이전트 설치
-cp -r agentpool/tier1-core/* ~/.claude/agents/
+# 대시보드 시작
+cd apps/observability-server
+node server-simple.cjs &
 
-# 특정 Tier 2 에이전트 설치 (예: Python Pro)
-cp agentpool/tier2-specialized/languages/python-pro.md ~/.claude/agents/
-
-# Claude Code에서 사용
-# 예: "Use the python-pro agent to refactor this code"
+cd ../observability-client
+npm run dev
 ```
 
-### 테스트 실행
+브라우저에서 `http://localhost:5173` 접속
 
-시스템이 올바르게 작동하는지 확인:
+---
 
+## 문제 해결
+
+### 일반적인 오류
+
+| 오류 | 원인 | 해결 |
+|------|------|------|
+| `OPENAI_API_KEY not set` | 환경 변수 누락 | `.env` 파일 확인 |
+| `playwright not found` | 의존성 미설치 | `pip install playwright && playwright install` |
+| `WebSocket connection failed` | 네트워크 문제 | 인터넷 연결 확인 |
+| `Agent timeout` | 작업 시간 초과 | `--timeout` 값 증가 |
+
+### 로그 확인
 ```bash
-# 모든 테스트 실행
-pytest
-
-# 빠른 단위 테스트만
-pytest tests/unit/ -v
-
-# Agent Pool 검증 (Tier 1 에이전트)
-pytest tests/e2e/test_agent_pool_tier1.py -v
-
-# 커버리지 포함
-pytest --cov --cov-report=html
-
-# 상세 가이드
-cat tests/README.md
+tail -f apps/realtime_poc/logs/agent.log
 ```
 
 ---
 
-## 📊 Observability 대시보드
+## 라이선스
 
-### 실시간 멀티 에이전트 모니터링
-
-Big Three Agents의 모든 활동을 **실시간으로 시각화**하는 웹 대시보드가 통합되어 있습니다.
-
-**주요 기능**:
-- ✅ **실시간 이벤트 타임라인**: 모든 에이전트 활동 실시간 추적
-- ✅ **멀티 세션 추적**: 여러 에이전트 동시 모니터링
-- ✅ **툴 사용 분석**: Read, Write, Bash 등 도구 사용 패턴
-- ✅ **성능 메트릭**: 활동 차트 및 통계
-- ✅ **채팅 기록**: 전체 대화 내역 조회
-- ✅ **에러 추적**: 문제 발생 즉시 파악
-
-### 빠른 시작
-
-```bash
-# Observability 시스템 시작
-./scripts/start-observability.sh
-
-# 대시보드 접속
-open http://localhost:5173
-
-# 또는 Docker로
-docker compose up -d observability-server observability-client
-```
-
-### 사용 예시
-
-```bash
-# 1. Observability 대시보드 시작
-./scripts/start-observability.sh
-
-# 2. 멀티 에이전트 작업 실행
-python -m apps.realtime-poc.big_three_realtime_agents.main \
-  --prompt "Create a FastAPI backend"
-
-# 3. 대시보드에서 실시간 확인:
-#    - OpenAI Orchestrator 결정
-#    - Claude Code 파일 생성/수정
-#    - Agent Pool 전문가 할당
-#    - 작업 소요 시간
-#    - 에러 발생 여부
-```
-
-**아키텍처**:
-```
-Claude Agent → Hooks → Server → WebSocket → Vue Dashboard
-                 ↓
-            SQLite DB
-```
-
-**상세 가이드**: [OBSERVABILITY_GUIDE.md](OBSERVABILITY_GUIDE.md)
+MIT License
 
 ---
 
+## 참고 문서
 
-## 📊 Observability 대시보드
-
-### 실시간 멀티 에이전트 모니터링 (NEW)
-
-**주요 기능**:
-- ✅ 실시간 이벤트 타임라인
-- ✅ 멀티 세션 추적
-- ✅ 성능 메트릭
-- ✅ 채팅 기록 조회
-
-**시작**:
-```bash
-./scripts/start-observability.sh
-open http://localhost:5173
-```
-
-**상세**: [OBSERVABILITY_GUIDE.md](OBSERVABILITY_GUIDE.md)
-
----
-
-## 🔍 컴포넌트 상세
-
-### 1. OpenAI Realtime Voice Agent
-
-**역할**: 음성 인터페이스 및 에이전트 조정자
-
-**주요 기능**:
-- 실시간 음성 대화 (OpenAI Realtime API)
-- 작업 분석 및 적절한 에이전트에 라우팅
-- 다중 에이전트 조율 및 결과 통합
-
-**기술 스택**:
-- OpenAI Realtime API (WebSocket)
-- 음성 스트리밍 및 처리
-- 함수 호출 기반 에이전트 제어
-
-### 2. Claude Code Agentic Coder
-
-**역할**: 자율적 소프트웨어 개발 에이전트
-
-**주요 기능**:
-- 코드 생성 및 수정
-- 독립적인 세션 관리
-- MCP 서버 통합 (browser_use 등)
-- 실시간 작업 로그 스트리밍
-
-**작업 디렉토리**: `apps/content-gen/`
-
-**레지스트리**: `apps/content-gen/agents/claude_code/registry.json`
-
-**핵심 메서드**:
-```python
-create_agent(agent_name: str)
-    # 새 에이전트 생성 및 세션 초기화
-
-command_agent(agent_name: str, prompt: str)
-    # 에이전트에 작업 지시
-
-check_agent_result(agent_name: str, operator_file: str)
-    # 실행 결과 조회
-```
-
-### 3. Gemini Browser Agent
-
-**역할**: 브라우저 자동화 및 웹 검증
-
-**주요 기능**:
-- Playwright 브라우저 제어
-- Gemini Computer Use API 통합
-- 스크린샷 기반 작업 수행
-- 세션별 작업 기록 관리
-
-**기술 스택**:
-- Playwright (Chromium 1440x900)
-- Gemini 2.0 Flash Experimental
-- 스크린샷 기반 비전 처리
-
-**레지스트리**: `apps/content-gen/agents/gemini/registry.json`
-
-**핵심 메서드**:
-```python
-setup_browser()
-    # Playwright 브라우저 초기화
-
-execute_task(task: str, url: Optional[str])
-    # 브라우저 작업 실행
-
-_run_browser_automation_loop(task: str, max_turns: int = 30)
-    # Computer Use 루프 (최대 30턴)
-```
-
----
-
-## 🤖 에이전트 풀
-
-### Tier 1: Core Agents (20개)
-
-프로덕션 검증 완료, 즉시 사용 가능:
-
-| 에이전트 | 설명 | 크기 |
-|---------|------|------|
-| `backend-developer` | 백엔드 개발 전문가 | 19KB |
-| `frontend-developer` | 프론트엔드 개발 전문가 | 25KB |
-| `python-pro` | Python 전문가 | 8.5KB |
-| `devops-engineer` | DevOps 및 인프라 | 13KB |
-| `qa-expert` | 품질 보증 및 테스팅 | 15KB |
-| `security-auditor` | 보안 감사 | 15KB |
-| `typescript-pro` | TypeScript 전문가 | - |
-| `kubernetes-architect` | K8s 아키텍트 | - |
-| `multi-agent-coordinator` | 멀티 에이전트 조율 | - |
-| ... | (총 20개) | 168KB |
-
-### Tier 2: Specialized Agents (~100개)
-
-**11개 카테고리**:
-
-1. **Languages** (15+): Rust, Go, Java, Kotlin, Scala, C++, C#, PHP, Ruby, etc.
-2. **Frameworks** (11): Next.js, Django, Rails, Laravel, Flutter, Angular, etc.
-3. **Infrastructure** (11): Terraform, Ansible, SRE, Platform Engineering, etc.
-4. **Quality** (11): Performance, Accessibility, Testing, Debugging, etc.
-5. **Security** (6): Penetration Testing, Compliance, Security Engineering
-6. **Data/AI** (8): MLOps, Data Science, NLP, LLM Architecture, etc.
-7. **DevTools** (10): CLI, Documentation, Git Workflow, Tooling, etc.
-8. **Specialized** (13): Mobile, IoT, GraphQL, WebSocket, MCP, etc.
-9. **Business** (13): UX Research, Product Management, Sales, etc.
-10. **Orchestration** (7): Workflow, Task Distribution, Knowledge Synthesis
-11. **Research** (1): Research Analyst
-
-### Tier 3: Experimental (~40개)
-
-**4개 카테고리**:
-- **Blockchain**: Blockchain Dev, FinTech, Quant Analysis
-- **Gaming**: Game Dev, Unity, Minecraft Bukkit
-- **Emerging Tech**: Quantum, Edge Computing, Web3
-- **Niche**: WordPress, SEO variants
-
-### 에이전트 생성 도구
-
-```bash
-# 템플릿 사용
-cp agentpool/_templates/tier1-template.md my-new-agent.md
-
-# 자동 검증
-bash agentpool/_templates/validate-agent.sh my-new-agent.md
-```
-
-**8단계 검증**:
-1. ✅ 독립 실행 가능 (no context manager)
-2. ✅ 실행 가능한 bash 명령어
-3. ✅ 실용적 메트릭 목표
-4. ✅ MCP 서버 우아한 실패처리
-5. ✅ 구체적 예시 코드
-6. ✅ 조건부 로직 구현
-7. ✅ 명확한 책임과 경계
-8. ✅ 완전한 문서화
-
----
-
-## 📚 문서
-
-### Big Three Realtime Agents
-
-- **[refactoring.md](./refactoring.md)** - 시스템 전체 분석 (299KB, 11,000+ 줄)
-  - 아키텍처 상세 설명
-  - 컴포넌트별 코드 분석
-  - 워크플로우 및 데이터 흐름
-  - 리팩토링된 모듈 구조
-
-- **[apps/realtime-poc/big_three_realtime_agents/README.md](./apps/realtime-poc/big_three_realtime_agents/README.md)**
-  - 리팩토링 후 모듈 구조
-  - 사용 가이드
-  - API 레퍼런스
-
-### Agent Pool System
-
-- **[agentpool/README.md](./agentpool/README.md)** - Agent Pool 개요
-- **[agentpool/MIGRATION_GUIDE.md](./agentpool/MIGRATION_GUIDE.md)** - v1→v2 마이그레이션
-- **[agentpool/AGENT_CLASSIFICATION_GUIDE.md](./agentpool/AGENT_CLASSIFICATION_GUIDE.md)** - 카테고리 분류 가이드
-- **[agentpool/COMPLETION_REPORT.md](./agentpool/COMPLETION_REPORT.md)** - 상세 완성 보고서
-
-### 프로젝트 문서
-
-- **[claudedocs/COMPLETE_SYSTEMS_SUMMARY.md](./claudedocs/COMPLETE_SYSTEMS_SUMMARY.md)** - 전체 시스템 요약
-- **[claudedocs/quality_enhancement_final_report.md](./claudedocs/quality_enhancement_final_report.md)** - 품질 향상 보고서
-
----
-
-## 🛠️ 기술 스택
-
-### Big Three System
-- **Python 3.11+**
-- **OpenAI Realtime API** - 음성 처리
-- **Claude Code SDK** - 코드 생성
-- **Gemini 2.0 Flash** - Computer Use
-- **Playwright** - 브라우저 자동화
-- **MCP (Model Context Protocol)** - 에이전트 도구 통합
-
-### Agent Pool
-- **Markdown** - 에이전트 정의
-- **Bash** - 자동화 스크립트
-- **YAML** - 메타데이터
-
----
-
-## 🤝 기여 방법
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-### 에이전트 기여 가이드라인
-
-1. `agentpool/_templates/tier2-template.md` 사용
-2. `validate-agent.sh`로 검증
-3. 적절한 tier/category에 배치
-4. README 업데이트
-
----
-
-## 📝 라이선스
-
-이 프로젝트는 MIT 라이선스 하에 배포됩니다. 자세한 내용은 [LICENSE](LICENSE) 파일을 참조하세요.
-
----
-
-## 🙏 감사의 말
-
-이 프로젝트는 다음 기술과 프로젝트를 기반으로 합니다:
-
-- [OpenAI Realtime API](https://platform.openai.com/docs/guides/realtime)
-- [Claude Code SDK](https://github.com/anthropics/anthropic-sdk-python)
-- [Google Gemini API](https://ai.google.dev/)
-- [Playwright](https://playwright.dev/)
-- Original Big-3-Super-Agent by [disler](https://github.com/disler/big-3-super-agent)
-
----
-
-## 📞 연락처
-
-문제가 있거나 질문이 있으시면 [Issues](https://github.com/cafe8601/-multi-agent-learning/issues)에 등록해주세요.
-
----
-
-**Made with ❤️ by the Multi-Agent Learning Community**
+- [시스템 상세 가이드](MULTIAGENT_SYSTEM_GUIDE.md)
+- [작동 원리 시각화](multi-agent-system-v5-how-it-works.html)

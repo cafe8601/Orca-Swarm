@@ -239,3 +239,7 @@ output_screenshots/
 
 adws/
 .env.ready
+
+# Backup folders (Claude Code / Serena integration backups)
+.claude_backup/
+.serena_backup/

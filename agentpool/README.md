@@ -1,4 +1,4 @@
-# Claude Code Agent System v2.0
+# Multi-Agent System v2.0
 
 Production-ready, independently executable AI agents organized by **quality tier + functional category**.
 
@@ -37,7 +37,7 @@ Production-ready, independently executable AI agents organized by **quality tier
 ## 🗂️ Directory Structure
 
 ```
-~/.claude/agents/
+agentpool/
 │
 ├── tier1-core/                    ✅ 20 agents (validated v2.0)
 │   ├── backend-developer.md       (19KB)

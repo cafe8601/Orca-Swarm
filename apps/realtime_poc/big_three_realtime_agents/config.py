@@ -50,7 +50,7 @@ CHANNELS = 1
 RATE = 24000
 
 # ================================================================
-# Claude Code Configuration
+# Claude Agent Configuration (using Claude Agent SDK)
 # ================================================================
 
 DEFAULT_CLAUDE_MODEL = os.environ.get(
@@ -58,9 +58,13 @@ DEFAULT_CLAUDE_MODEL = os.environ.get(
 )
 ENGINEER_NAME = os.environ.get("ENGINEER_NAME", "Dan")
 REALTIME_ORCH_AGENT_NAME = os.environ.get("REALTIME_ORCH_AGENT_NAME", "ada")
-CLAUDE_CODE_TOOL = "claude_code"
-CLAUDE_CODE_TOOL_SLUG = "claude_code"
+CLAUDE_AGENT_TOOL = "claude_agent"
+CLAUDE_AGENT_TOOL_SLUG = "claude_agent"
 AGENTIC_CODING_TYPE = "agentic_coding"
+
+# Legacy aliases for backward compatibility
+CLAUDE_CODE_TOOL = CLAUDE_AGENT_TOOL
+CLAUDE_CODE_TOOL_SLUG = CLAUDE_AGENT_TOOL_SLUG
 
 # ================================================================
 # Gemini Computer Use Configuration
@@ -87,7 +91,9 @@ AGENT_WORKING_DIRECTORY = BASE_DIR.parent / "content-gen"
 
 # Set AGENTS_BASE_DIR relative to working directory for consolidated outputs
 AGENTS_BASE_DIR = AGENT_WORKING_DIRECTORY / "agents"
-CLAUDE_CODE_REGISTRY_PATH = AGENTS_BASE_DIR / CLAUDE_CODE_TOOL_SLUG / "registry.json"
+CLAUDE_AGENT_REGISTRY_PATH = AGENTS_BASE_DIR / CLAUDE_AGENT_TOOL_SLUG / "registry.json"
+# Legacy alias
+CLAUDE_CODE_REGISTRY_PATH = CLAUDE_AGENT_REGISTRY_PATH
 GEMINI_REGISTRY_PATH = AGENTS_BASE_DIR / GEMINI_TOOL_SLUG / "registry.json"
 
 # ================================================================

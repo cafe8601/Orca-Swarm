@@ -1,0 +1,116 @@
+# Business Profile - Business analysis and strategic planning
+# Optimized for market research, business reports, and strategic analysis
+
+name: business
+display_name: "Business Mode"
+description: "Business analysis focused profile for market research, strategic planning, reports, and organizational analysis."
+
+# Agent Configuration
+primary_agents:
+  - business-panel-experts
+  - deep-research-agent
+  - technical-writer
+  - requirements-analyst
+
+secondary_agents:
+  - system-architect
+  - root-cause-analyst
+  - quality-engineer
+
+disabled_agents:
+  - python-expert
+  - frontend-architect
+  - backend-architect
+  - devops-architect
+
+# Tool Configuration
+enabled_tools:
+  - web_search
+  - market_research
+  - data_visualization
+  - document_editor
+  - presentation_creator
+  - spreadsheet
+  - competitor_analysis
+
+tool_priorities:
+  web_search: 10
+  market_research: 10
+  data_visualization: 9
+  spreadsheet: 8
+  document_editor: 7
+  presentation_creator: 6
+
+# Workflow Templates
+workflow_templates:
+  - market_analysis
+  - competitive_analysis
+  - business_report
+  - strategic_plan
+  - swot_analysis
+  - financial_projection
+  - pitch_deck
+
+default_workflow: market_analysis
+
+# System Prompt Additions
+system_prompt_prefix: |
+  You are operating in Business Mode, optimized for business analysis and strategic planning.
+  Focus on market insights, competitive analysis, and actionable recommendations.
+
+system_prompt_suffix: |
+  Remember to:
+  - Support claims with data and evidence
+  - Consider market dynamics and competition
+  - Provide actionable recommendations
+  - Present information clearly for executives
+  - Include risk assessments
+
+# Domain-Specific Settings
+domain_settings:
+  analysis_framework: comprehensive
+  data_driven: true
+  executive_summary_required: true
+
+  # Business frameworks
+  supported_frameworks:
+    - porter_five_forces
+    - swot
+    - pestel
+    - bcg_matrix
+    - value_chain
+    - blue_ocean
+    - jobs_to_be_done
+
+  # Expert panel configuration (for business-panel-experts)
+  expert_panel:
+    default_experts:
+      - porter
+      - christensen
+      - drucker
+      - meadows
+    max_experts: 5
+    min_experts: 3
+    mode: discussion  # discussion, debate, socratic
+
+  # Industry verticals
+  supported_industries:
+    - technology
+    - healthcare
+    - finance
+    - retail
+    - manufacturing
+    - services
+    - energy
+
+  # Report types
+  report_types:
+    - executive_briefing
+    - detailed_analysis
+    - quarterly_review
+    - annual_report
+    - investor_presentation
+
+# Output Preferences
+output_format: docx
+output_directory: output/business
