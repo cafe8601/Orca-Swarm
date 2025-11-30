@@ -550,11 +550,11 @@
             <span class="version-badge">v5.0</span>
             <h1>Multi-Agent Learning System</h1>
             <p>작동 원리 완벽 가이드</p>
-            <p class="subtitle">Claude Opus 4.5 + Claude Agent SDK + Voice Control + 154 Agents</p>
+            <p class="subtitle">Claude Sonnet 4.5 + Claude Agent SDK + Voice Control + 162 Agents</p>
             
             <div class="stats-row">
                 <div class="stat-item">
-                    <div class="value">154</div>
+                    <div class="value">162</div>
                     <div class="label">전문 에이전트</div>
                 </div>
                 <div class="stat-item">
@@ -587,7 +587,7 @@ flowchart TB
     end
     
     subgraph ORCH["🧠 Phase 1: Orchestration"]
-        OPUS["Claude Opus 4.5<br/>━━━━━━━━━━━━<br/>지능형 라우팅<br/>Claude Agent SDK"]
+        OPUS["OpenAI Realtime<br/>━━━━━━━━━━━━<br/>지능형 라우팅<br/>GPT-Realtime-2025-08-28"]
     end
     
     subgraph PLAN["📋 Phase 2: Planning"]
@@ -596,7 +596,7 @@ flowchart TB
     
     subgraph EXEC["⚡ Phase 3: Orchestration"]
         DAG["DAG Workflow"]
-        POOL["Agent Pool 154"]
+        POOL["Agent Pool 162"]
         MEM["Memory 3-Tier"]
         RAG["Google RAG"]
         SEC["Security RBAC"]
@@ -606,8 +606,8 @@ flowchart TB
     subgraph RUN["🔧 Phase 4: Execution"]
         TDD["TDD Engine<br/>RED→GREEN→REFACTOR"]
         SANDBOX["Sandbox<br/>Docker or E2B"]
-        SONNET["Claude Sonnet 4.5"]
-        GEMINI["Gemini 3 Pro<br/>Browser Agent"]
+        SONNET["Claude Sonnet 4.5<br/>claude-sonnet-4-5-20250929"]
+        GEMINI["Gemini 2.5 Preview<br/>Browser Agent"]
     end
     
     subgraph VALID["✅ Phase 5: Validation"]
@@ -644,7 +644,7 @@ flowchart TB
                 <div class="phase-item phase-1">
                     <div class="phase-icon">🧠</div>
                     <div class="phase-name">Phase 1</div>
-                    <div class="phase-desc">Orchestration<br/>Claude Opus 4.5</div>
+                    <div class="phase-desc">Orchestration<br/>OpenAI Realtime</div>
                 </div>
                 <div class="phase-item phase-2">
                     <div class="phase-icon">📋</div>
@@ -676,45 +676,45 @@ flowchart TB
             <div class="grid-3">
                 <div class="model-card model-openai">
                     <h4>🎙️ OpenAI Realtime API</h4>
-                    <div class="role">역할: 음성 입력 처리</div>
+                    <div class="role">역할: 오케스트레이터 + 음성 입력</div>
                     <div class="features">
+                        • <strong>모델:</strong> gpt-realtime-2025-08-28<br>
                         • WebSocket 실시간 연결<br>
-                        • Whisper-1 전사<br>
                         • Server VAD 턴 감지<br>
                         • PCM16 오디오 포맷
                     </div>
                 </div>
                 
                 <div class="model-card model-claude">
-                    <h4>🧠 Claude Opus 4.5 + Sonnet 4.5</h4>
-                    <div class="role">역할: 오케스트레이션 + 코딩</div>
+                    <h4>🧠 Claude Sonnet 4.5</h4>
+                    <div class="role">역할: Agentic Coding</div>
                     <div class="features">
-                        • <strong>Opus 4.5:</strong> 고수준 계획, 라우팅<br>
-                        • <strong>Sonnet 4.5:</strong> 코드 생성, 구현<br>
+                        • <strong>모델:</strong> claude-sonnet-4-5-20250929<br>
+                        • 코드 생성, 분석, 구현<br>
                         • Claude Agent SDK 통합<br>
                         • MAX 구독자 무료
                     </div>
                 </div>
-                
+
                 <div class="model-card model-gemini">
-                    <h4>🌐 Gemini 3 Pro Preview</h4>
+                    <h4>🌐 Gemini 2.5 Computer Use Preview</h4>
                     <div class="role">역할: 브라우저 자동화</div>
                     <div class="features">
+                        • <strong>모델:</strong> gemini-2.5-computer-use-preview-10-2025<br>
                         • Playwright 통합<br>
                         • 1440x900 뷰포트<br>
-                        • 30턴 최대 세션<br>
                         • 웹 리서치 & 스크래핑
                     </div>
                 </div>
             </div>
             
             <div class="code-block">
-                <pre># 모델 설정 예시
+                <pre># 모델 설정 (config.py)
 MODELS = {
-    "voice": "gpt-4o-realtime-preview",      # OpenAI Realtime API
-    "orchestrator": "claude-opus-4-5-20250514",    # Claude Opus 4.5
-    "coder": "claude-sonnet-4-5-20250514",   # Claude Sonnet 4.5
-    "browser": "gemini-3-pro-preview"        # Gemini 3 Pro Preview
+    "voice": "gpt-realtime-2025-08-28",           # OpenAI Realtime API
+    "voice_mini": "gpt-realtime-mini-2025-10-06", # OpenAI Realtime Mini
+    "coder": "claude-sonnet-4-5-20250929",        # Claude Sonnet 4.5 (Agent SDK)
+    "browser": "gemini-2.5-computer-use-preview-10-2025"  # Gemini Browser
 }</pre>
             </div>
         </div>
@@ -731,46 +731,46 @@ sequenceDiagram
     participant U as 👤 User
     participant WS as 🔌 WebSocket
     participant OAI as 🎙️ OpenAI Realtime
-    participant OPUS as 🧠 Claude Opus 4.5
-    
+    participant ORCH as 🧠 Orchestrator
+
     U->>WS: 음성 입력
     WS->>OAI: PCM16 오디오 스트림
     OAI->>OAI: VAD 턴 감지
     OAI->>OAI: Whisper 전사
     OAI-->>WS: 전사 결과
-    WS->>OPUS: 텍스트 요청
-    OPUS->>OPUS: 의도 분석 & 라우팅
-    OPUS-->>WS: 라우팅 결정
+    WS->>ORCH: 텍스트 요청
+    ORCH->>ORCH: 의도 분석 & 라우팅
+    ORCH-->>WS: 라우팅 결정
                     </div>
                 </div>
                 
                 <div class="component-card">
-                    <h3>🧠 Claude Agent SDK 라우팅</h3>
+                    <h3>🧠 Big Three 라우팅 시스템</h3>
                     <div class="mermaid">
 flowchart TB
     REQ["📝 사용자 요청"]
-    
-    OPUS["🧠 Claude Opus 4.5<br/>의도 분석"]
-    
+
+    ORCH["🧠 OpenAI Orchestrator<br/>의도 분석"]
+
     subgraph ROUTING["라우팅 결정"]
         CODING["💻 CODING<br/>코드 생성/구현"]
         BROWSER["🌐 BROWSER<br/>웹 리서치"]
         PLANNING["📋 PLANNING<br/>복잡한 기능"]
         CLARIFY["❓ CLARIFY<br/>추가 정보 필요"]
     end
-    
+
     SONNET["Claude Sonnet 4.5"]
-    GEMINI["Gemini 3 Pro"]
-    SPEC["Spec-Driven Planner"]
-    
-    REQ --> OPUS
-    OPUS --> CODING --> SONNET
-    OPUS --> BROWSER --> GEMINI
-    OPUS --> PLANNING --> SPEC
-    OPUS --> CLARIFY
-    
+    GEMINI["Gemini 2.5 Preview"]
+    SPEC["Workflow Planner"]
+
+    REQ --> ORCH
+    ORCH --> CODING --> SONNET
+    ORCH --> BROWSER --> GEMINI
+    ORCH --> PLANNING --> SPEC
+    ORCH --> CLARIFY
+
     style REQ fill:#1a365d,stroke:#f472b6
-    style OPUS fill:#1a365d,stroke:#fbbf24
+    style ORCH fill:#1a365d,stroke:#fbbf24
     style ROUTING fill:#1a365d,stroke:#00d9ff
                     </div>
                 </div>
@@ -943,7 +943,7 @@ gantt
 
         <!-- 6. Agent Pool -->
         <div class="section">
-            <h2>6. Agent Pool v2.0 - 154 전문 에이전트 <span class="status-badge status-ready">100% Ready</span></h2>
+            <h2>6. Agent Pool v2.0 - 162 전문 에이전트 <span class="status-badge status-ready">100% Ready</span></h2>
             
             <div class="grid-3">
                 <div class="tier-card tier-starter">
@@ -959,10 +959,10 @@ gantt
                 
                 <div class="tier-card tier-production">
                     <h4>🏢 Production Tier</h4>
-                    <div class="agents">10-20</div>
+                    <div class="agents">10-24</div>
                     <p style="color: #9ca3af; margin-bottom: 15px;">팀 프로젝트, 프로덕션</p>
                     <ul>
-                        <li>Core Agents (20)</li>
+                        <li>Core Agents (24)</li>
                         <li>DevOps, QA, Security</li>
                         <li>주요 Framework 전문가</li>
                     </ul>
@@ -970,11 +970,11 @@ gantt
                 
                 <div class="tier-card tier-enterprise">
                     <h4>🚀 Enterprise Tier</h4>
-                    <div class="agents">50-154</div>
+                    <div class="agents">50-162</div>
                     <p style="color: #9ca3af; margin-bottom: 15px;">대규모 엔터프라이즈</p>
                     <ul>
-                        <li>Tier 1 Core (20)</li>
-                        <li>Tier 2 Specialized (120)</li>
+                        <li>Tier 1 Core (24)</li>
+                        <li>Tier 2 Specialized (124)</li>
                         <li>Tier 3 Experimental (14)</li>
                     </ul>
                 </div>
@@ -1468,7 +1468,7 @@ flowchart TB
                         <td>Local Docker (FREE) or E2B ($20)</td>
                     </tr>
                     <tr>
-                        <td>Gemini 3 Pro</td>
+                        <td>Gemini 2.5 Preview</td>
                         <td>사용량 기반</td>
                         <td>사용량 기반</td>
                         <td>무료 티어 활용</td>
@@ -1519,7 +1519,7 @@ flowchart TB
                 </div>
                 <div class="status-item">
                     <div class="status-check">✓</div>
-                    <div class="status-name">Agent Pool (154)</div>
+                    <div class="status-name">Agent Pool (162)</div>
                     <div class="status-percent">100%</div>
                 </div>
                 <div class="status-item">
@@ -1575,7 +1575,7 @@ flowchart TB
             <h2 style="color: #00d9ff; margin-bottom: 15px;">🎉 시스템 구축 완료!</h2>
             <p>
                 Multi-Agent Learning System v5.0 (Merged Edition)<br>
-                Production Ready (100%) | 154 Agents | $90-140/월 절감
+                Production Ready (100%) | 162 Agents | $90-140/월 절감
             </p>
             <div class="footer-badge">
                 ✅ All Components 100% Ready
